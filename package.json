@@ -1,0 +1,41 @@
+{
+  "name": "dynamic-pricing-agent",
+  "version": "1.0.0",
+  "description": "A web application that scrapes product details and analyzes pricing information",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "node test.js"
+  },
+  "keywords": [
+    "pricing",
+    "scraping",
+    "ecommerce",
+    "web-scraper",
+    "product-analysis"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.9.0",
+    "cors": "^2.8.5",
+    "countries-and-timezones": "^3.8.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/dynamic-pricing-agent.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/dynamic-pricing-agent/issues"
+  },
+  "homepage": "https://github.com/yourusername/dynamic-pricing-agent#readme"
+}

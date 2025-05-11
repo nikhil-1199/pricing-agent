@@ -1,0 +1,329 @@
+/* style.css - Complete Dynamic Pricing Agent Styles */
+
+/* Base Styles */
+body {
+    font-family: 'Inter', system-ui, -apple-system;
+    background: #f8fafc;
+    color: #1e293b;
+}
+
+/* Container & Cards */
+.container {
+    max-width: 1200px;
+    padding: 2rem;
+}
+
+.card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease;
+    margin-bottom: 1.5rem;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+/* Input Section */
+.input-card {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid #e2e8f0;
+}
+
+/* Header */
+.analytics-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 1rem;
+}
+
+.analytics-header h1 {
+    color: #1e293b;
+    font-weight: 700;
+}
+
+.analytics-header p {
+    color: #64748b;
+    font-size: 1.125rem;
+}
+
+/* Forms */
+.pricing-form {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    margin-top: 1.5rem;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #475569;
+}
+
+.form-control {
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    font-size: 1rem;
+    transition: border-color 0.15s ease;
+}
+
+.form-control:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.1);
+}
+
+/* Buttons */
+.btn-primary {
+    background: #3b82f6;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    transition: background 0.15s ease;
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+}
+
+.btn-primary:disabled {
+    background: #93c5fd;
+    cursor: not-allowed;
+}
+
+/* Product Cards */
+.product-card, .competitor-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    margin-bottom: 1rem;
+}
+
+.product-card:hover, .competitor-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+}
+
+.product-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.competitor-price {
+    color: #3b82f6;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+/* Strategy Visualization */
+.strategy-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.strategy-card {
+    background: #f1f5f9;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+.strategy-card:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.optimized-strategy {
+    border: 2px solid #3b82f6;
+    background: linear-gradient(135deg, #ebf4ff 0%, #f1f5f9 100%);
+}
+
+.metrics {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* Promotion Calendar */
+#promotionCalendar {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.promotion-event {
+    background: white;
+    padding: 1.25rem;
+    border-radius: 0.75rem;
+    border-left: 4px solid #3b82f6;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+.promotion-event:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* Badges and Labels */
+.badge {
+    border-radius: 0.375rem;
+    padding: 0.25rem 0.75rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.badge.bg-primary {
+    background-color: #3b82f6 !important;
+}
+
+.badge.bg-secondary {
+    background-color: #64748b !important;
+}
+
+.badge.bg-info {
+    background-color: #0891b2 !important;
+}
+
+/* Alert Messages */
+.alert {
+    border-radius: 0.75rem;
+    margin-bottom: 1rem;
+    border: none;
+    padding: 1rem 1.25rem;
+}
+
+.alert-success {
+    background-color: #f0fdf4;
+    color: #166534;
+}
+
+.alert-danger {
+    background-color: #fef2f2;
+    color: #991b1b;
+}
+
+.alert-warning {
+    background-color: #fffbeb;
+    color: #92400e;
+}
+
+.alert-info {
+    background-color: #f0f9ff;
+    color: #075985;
+}
+
+/* Loading States */
+.loading-state {
+    text-align: center;
+    padding: 3rem;
+}
+
+.spinner-border {
+    color: #3b82f6;
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Utility Classes */
+.text-muted {
+    color: #64748b;
+}
+
+.fw-bold {
+    font-weight: 600;
+}
+
+.mb-0 {
+    margin-bottom: 0;
+}
+
+.mb-1 {
+    margin-bottom: 0.25rem;
+}
+
+.mb-2 {
+    margin-bottom: 0.5rem;
+}
+
+.mb-3 {
+    margin-bottom: 1rem;
+}
+
+.mb-4 {
+    margin-bottom: 1.5rem;
+}
+
+.mb-5 {
+    margin-bottom: 3rem;
+}
+
+.mt-2 {
+    margin-top: 0.5rem;
+}
+
+.mt-3 {
+    margin-top: 1rem;
+}
+
+.mt-4 {
+    margin-top: 1.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .strategy-grid, #promotionCalendar {
+        grid-template-columns: 1fr;
+    }
+    
+    .container {
+        padding: 1rem;
+    }
+    
+    .pricing-form {
+        grid-template-columns: 1fr;
+    }
+    
+    .analytics-header h1 {
+        font-size: 1.75rem;
+    }
+    
+    .product-image {
+        height: 150px;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .btn, .input-group, .loading-state {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
