@@ -16,4 +16,5 @@
     "api/*.js": {
       "maxDuration": 90
     }
+  }
 }
