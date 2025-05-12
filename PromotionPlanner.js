@@ -1,418 +1,553 @@
-// PromotionPlanner.js - Module for integration with Dynamic Pricing Agent
-// This module provides promotion scheduling and budgets based on product category seasonality
+// PromotionPlanner.js - With Perplexity integration for dynamic promotional suggestions
+// This version properly handles currencies and product details
 
-// Convert your existing category seasonality data to the format expected by the main app
-const categorySeasonality = {
-    electronics: {
-        'January': 0.7,  // Normalize values to 0-1.5 scale
-        'February': 0.5,
-        'March': 0.4,
-        'April': 0.3,
-        'May': 0.5,
-        'June': 0.6,
-        'July': 0.6,    
-        'August': 0.8,  
-        'September': 0.6,
-        'October': 0.7,
-        'November': 1.0, 
-        'December': 1.0  
-    },
-    clothing: {
-        'January': 0.7,  
-        'February': 0.6,
-        'March': 0.7,   
-        'April': 0.6,
-        'May': 0.8,
-        'June': 0.6,
-        'July': 0.8,
-        'August': 0.9,  
-        'September': 0.7, 
-        'October': 0.5,
-        'November': 0.9, 
-        'December': 1.0
-    },
-    home: {
-        'January': 0.8,
-        'February': 0.6,
-        'March': 0.7,   
-        'April': 0.6,   
-        'May': 0.9,
-        'June': 0.8,
-        'July': 0.8,
-        'August': 0.6,
-        'September': 0.7,
-        'October': 0.5,
-        'November': 1.0, 
-        'December': 0.9
-    },
-    beauty: {
-        'January': 0.6,
-        'February': 0.8, 
-        'March': 0.5,
-        'April': 0.6,
-        'May': 0.9,     
-        'June': 0.6,
-        'July': 0.5,
-        'August': 0.6,
-        'September': 0.7,
-        'October': 0.6,
-        'November': 0.9,
-        'December': 1.0  
-    },
-    toys: {
-        'January': 0.5,  
-        'February': 0.3,
-        'March': 0.3,
-        'April': 0.5,
-        'May': 0.6,
-        'June': 0.6,
-        'July': 0.5,
-        'August': 0.7,
-        'September': 0.6,
-        'October': 0.8,  
-        'November': 0.9, 
-        'December': 1.0  
-    },
-    food: {
-        'January': 0.6,
-        'February': 0.7,
-        'March': 0.6,
-        'April': 0.8,
-        'May': 0.7,
-        'June': 0.7,
-        'July': 0.9,
-        'August': 0.7,
-        'September': 0.7,
-        'October': 0.8,
-        'November': 1.0, 
-        'December': 1.0  
-    },
-    sports: {
-        'January': 0.8,  
-        'February': 0.6,
-        'March': 0.7,
-        'April': 0.8,
-        'May': 0.7,
-        'June': 0.8,
-        'July': 0.9,
-        'August': 0.8,
-        'September': 0.7,
-        'October': 0.6,
-        'November': 0.7,
-        'December': 0.9  
-    },
-    accessories: {
-        'January': 0.7,
-        'February': 0.5,
-        'March': 0.6,
-        'April': 0.6,
-        'May': 0.7,
-        'June': 0.7,
-        'July': 0.7,
-        'August': 0.7,
-        'September': 0.7,
-        'October': 0.7,
-        'November': 0.9,
-        'December': 1.0
-    },
-    books: {
-        'January': 0.9,
-        'February': 0.9,
-        'March': 0.9,
-        'April': 1.0,
-        'May': 1.0,
-        'June': 0.9,
-        'July': 0.9,
-        'August': 1.2,  
-        'September': 1.1,
-        'October': 1.0,
-        'November': 1.1,
-        'December': 1.3  
-    },
-    default: {
-        'January': 0.7,
-        'February': 0.5,
-        'March': 0.6,
-        'April': 0.6,
-        'May': 0.7,
-        'June': 0.7,
-        'July': 0.7,
-        'August': 0.7,
-        'September': 0.7,
-        'October': 0.7,
-        'November': 0.9,
-        'December': 1.0
+class PromotionPlanner {
+    constructor() {
+      console.log('PromotionPlanner initialized');
     }
-};
-
-// Convert promotional events to the format expected
-const promotionalEvents = {
-    'January': [
-        { name: 'New Year Sales', impact: 1.3, duration: '1-7' },
-        { name: 'Inventory Clearance', impact: 1.2, duration: '8-31' }
-    ],
-    'February': [
-        { name: 'Valentine\'s Day', impact: 1.4, duration: '10-14', categories: ['beauty', 'accessories', 'clothing'] },
-        { name: 'President\'s Day', impact: 1.2, duration: '15-17' }
-    ],
-    'March': [
-        { name: 'Spring Sales', impact: 1.1, duration: '1-31' },
-        { name: 'End of Quarter', impact: 1.1, duration: '25-31' }
-    ],
-    'April': [
-        { name: 'Easter', impact: 1.2, duration: '10-12', categories: ['food', 'toys', 'clothing'] },
-        { name: 'Spring Break', impact: 1.2, duration: '15-31' }
-    ],
-    'May': [
-        { name: 'Mother\'s Day', impact: 1.4, duration: '8-10', categories: ['beauty', 'accessories', 'home'] },
-        { name: 'Memorial Day', impact: 1.3, duration: '24-26' }
-    ],
-    'June': [
-        { name: 'Father\'s Day', impact: 1.3, duration: '15-17', categories: ['electronics', 'sports', 'accessories'] },
-        { name: 'Graduation', impact: 1.2, duration: '1-15' }
-    ],
-    'July': [
-        { name: 'Independence Day', impact: 1.2, duration: '1-4' },
-        { name: 'Prime Day-type Events', impact: 1.4, duration: '15-16', categories: ['electronics'] }
-    ],
-    'August': [
-        { name: 'Back to School', impact: 1.4, duration: '15-31', categories: ['electronics', 'clothing', 'books'] }
-    ],
-    'September': [
-        { name: 'Labor Day', impact: 1.2, duration: '1-3' },
-        { name: 'Fall Kickoff', impact: 1.1, duration: '15-30' }
-    ],
-    'October': [
-        { name: 'Halloween', impact: 1.3, duration: '25-31', categories: ['toys', 'clothing', 'food'] },
-        { name: 'Pre-Holiday Sales', impact: 1.1, duration: '1-31' }
-    ],
-    'November': [
-        { name: 'Black Friday', impact: 1.8, duration: '24-26' },
-        { name: 'Cyber Monday', impact: 1.6, duration: '27', categories: ['electronics'] },
-        { name: 'Thanksgiving', impact: 1.3, duration: '23-25', categories: ['food'] }
-    ],
-    'December': [
-        { name: 'Holiday Shopping', impact: 1.5, duration: '1-23' },
-        { name: 'Christmas', impact: 1.6, duration: '20-25' },
-        { name: 'End of Year', impact: 1.3, duration: '26-31' }
-    ]
-};
-
-// Calculate promotion budget based on product metrics
-function calculatePromotionBudget(productCost, productPrice, marginTarget, avgMonthlySales, seasonalityFactor) {
-    // Calculate current margin
-    const currentMargin = ((productPrice - productCost) / productPrice) * 100;
-    
-    // Calculate average monthly revenue
-    const monthlyRevenue = avgMonthlySales * productPrice;
-    
-    // Base budget as percentage of monthly revenue, adjusted by seasonality
-    const basePercentage = 5; // 5% of monthly revenue as base
-    let budgetPercentage = basePercentage * seasonalityFactor; // Adjust by seasonality
-    
-    // Adjust budget based on margin health
-    if (currentMargin > marginTarget * 1.2) {
-        // Healthy margin, can spend more on promotion
-        budgetPercentage *= 1.3;
-    } else if (currentMargin < marginTarget) {
-        // Tight margin, be more conservative
-        budgetPercentage *= 0.7;
-    }
-    
-    // Calculate promotion budget
-    const promotionBudget = (monthlyRevenue * budgetPercentage) / 100;
-    
-    return {
-        promotionBudget: Math.round(promotionBudget),
-        budgetAsPercentageOfRevenue: Math.round(budgetPercentage * 10) / 10,
-        currentMargin: Math.round(currentMargin * 10) / 10,
-        marginTarget: marginTarget
-    };
-}
-
-// Recommend discount based on seasonality and margins
-function recommendDiscount(currentMargin, marginTarget, seasonalityFactor) {
-    // Base discount percentage
-    let baseDiscount = 10;
-    
-    // Adjust based on seasonality
-    if (seasonalityFactor >= 0.9) {
-        // Peak season - lower discounts needed
-        baseDiscount = 10;
-    } else if (seasonalityFactor >= 0.7) {
-        // High season
-        baseDiscount = 15;
-    } else if (seasonalityFactor >= 0.5) {
-        // Medium season
-        baseDiscount = 20;
-    } else {
-        // Low season - higher discounts needed
-        baseDiscount = 25;
-    }
-    
-    // Adjust based on margin health
-    const marginBuffer = currentMargin - marginTarget;
-    
-    if (marginBuffer > 15) {
-        // Very healthy margin, can offer more discount
-        baseDiscount += 10;
-    } else if (marginBuffer > 10) {
-        // Healthy margin
-        baseDiscount += 5;
-    } else if (marginBuffer < 0) {
-        // Already below target margin, reduce discount
-        baseDiscount = Math.max(5, baseDiscount - 10);
-    }
-    
-    // Cap the discount at a reasonable level
-    return Math.min(35, Math.round(baseDiscount));
-}
-
-// Calculate projected sales increase based on seasonality and discount
-function calculateProjectedSalesIncrease(seasonalityFactor, discountPercentage) {
-    // Base increase from discount (every 5% discount increases sales by ~10%)
-    const discountMultiplier = (discountPercentage / 5) * 10;
-    
-    // Seasonality impact
-    const seasonalityMultiplier = seasonalityFactor * 20;
-    
-    // Calculate projected increase
-    const projectedIncrease = discountMultiplier + seasonalityMultiplier;
-    
-    return Math.round(Math.min(100, projectedIncrease)); // Cap at 100%
-}
-
-// Get priority level based on seasonality
-function getPriorityLevel(seasonalityFactor) {
-    if (seasonalityFactor >= 0.9) return 'High';
-    if (seasonalityFactor >= 0.7) return 'Medium';
-    return 'Low';
-}
-
-// Get recommended actions based on seasonality and events
-function getRecommendedActions(seasonalityFactor, events) {
-    const actions = [];
-    
-    if (seasonalityFactor >= 0.8) {
-        actions.push('Flash sales', 'Email campaigns', 'Social media ads', 'Influencer partnerships');
-    } else if (seasonalityFactor >= 0.6) {
-        actions.push('Email campaigns', 'Social media ads');
-    } else {
-        actions.push('Email campaigns', 'Loyalty program promotions');
-    }
-    
-    // Add event-specific actions
-    events.forEach(event => {
-        if (event.impact >= 1.3) {
-            actions.push(`${event.name} themed promotions`);
-        }
-    });
-    
-    return [...new Set(actions)]; // Remove duplicates
-}
-
-// Main function to generate promotion schedule
-function generatePromotionSchedule(category, productCost, productPrice, marginTarget, avgMonthlySales) {
-    const months = [
-        'January', 'February', 'March', 'April', 'May', 'June', 
-        'July', 'August', 'September', 'October', 'November', 'December'
-    ];
-    
-    // Use the specified category or default if not found
-    const seasonalityData = categorySeasonality[category] || categorySeasonality.default;
-    
-    const schedule = months.map(month => {
-        const seasonalityFactor = seasonalityData[month];
-        const events = promotionalEvents[month] || [];
+  
+    async generatePromotionalCalendar(options = {}) {
+      try {
+        console.log('Generating promotional calendar with options:', options);
         
-        // Filter events relevant to this category
-        const relevantEvents = events.filter(event => 
-            !event.categories || event.categories.includes(category)
-        );
+        // Extract all options with robust defaults for any missing fields
+        // Prioritize currency information from the product data with clear fallbacks
+        const currencyCode = options.currencyCode || options.currency_code || 'USD';
+        const currencySymbol = options.currencySymbol || options.currency_symbol || '';
         
-        // Calculate budget based on seasonality factor
-        const budgetInfo = calculatePromotionBudget(
-            productCost,
-            productPrice,
-            marginTarget,
-            avgMonthlySales,
-            seasonalityFactor
-        );
+        const { 
+          category = "GENERAL", 
+          country = "Global", 
+          subCategory = "", 
+          productName = 'Product',
+          productPrice = 0,
+          productionCost = productPrice * 0.6,
+          targetMargin = 20,
+          competitors = []
+        } = options;
         
-        // Recommend discount based on margins and seasonality
-        const recommendedDiscount = recommendDiscount(
-            budgetInfo.currentMargin,
-            marginTarget,
-            seasonalityFactor
-        );
+        console.log(`Using currency: ${currencySymbol} (${currencyCode}) for promotions`);
         
-        // Calculate projected sales increase
-        const projectedSalesIncrease = calculateProjectedSalesIncrease(
-            seasonalityFactor,
-            recommendedDiscount
-        );
-        
-        // Get priority and actions
-        const priority = getPriorityLevel(seasonalityFactor);
-        const actions = getRecommendedActions(seasonalityFactor, relevantEvents);
-        
-        // Generate reason for this month's strategy
-        let reason = '';
-        if (seasonalityFactor >= 0.9) {
-            reason = `Peak season for ${category}`;
-            if (relevantEvents.length > 0) {
-                reason += ` with ${relevantEvents.map(e => e.name).join(' and ')}`;
-            }
-        } else if (seasonalityFactor <= 0.5) {
-            reason = `Low season for ${category}`;
-            if (relevantEvents.length > 0) {
-                reason += `, but ${relevantEvents.map(e => e.name).join(' and ')} provides opportunity`;
-            } else {
-                reason += '. Focus on inventory clearance and customer retention.';
-            }
-        } else {
-            if (relevantEvents.length > 0) {
-                reason = `Standard season with ${relevantEvents.map(e => e.name).join(' and ')}`;
-            } else {
-                reason = `Standard season for ${category}. Maintain steady promotion strategy.`;
-            }
-        }
-        
-        return {
-            month: month,
-            seasonalityFactor: seasonalityFactor.toFixed(2),
-            priority: priority,
-            discount: recommendedDiscount,
-            promotionBudget: budgetInfo.promotionBudget,
-            budgetPercentage: budgetInfo.budgetAsPercentageOfRevenue,
-            salesIncrease: projectedSalesIncrease,
-            currentMargin: budgetInfo.currentMargin,
-            actions: actions,
-            events: relevantEvents.map(e => e.name),
-            reason: reason
+        // Use Perplexity to generate promotional calendar data
+        const perplexityParams = {
+          productName,
+          category,
+          subCategory,
+          country,
+          currencyCode,
+          currencySymbol,
+          productPrice,
+          productionCost,
+          targetMargin,
+          competitors: Array.isArray(competitors) ? competitors.join(", ") : ""
         };
-    });
+        
+        console.log('Sending data to Perplexity:', JSON.stringify(perplexityParams, null, 2));
+        const perplexityData = await this.callPerplexity(perplexityParams);
+        
+        // If we have a valid response from Perplexity, use it
+        if (perplexityData) {
+          console.log("Successfully generated promotional calendar using Perplexity AI");
+          
+          // Ensure currency information is correctly set in the response
+          // If Perplexity didn't include it, add it from our input
+          if (!perplexityData.currencyCode || perplexityData.currencyCode === 'USD' && currencyCode !== 'USD') {
+            perplexityData.currencyCode = currencyCode;
+          }
+          
+          if (!perplexityData.currencySymbol) {
+            perplexityData.currencySymbol = currencySymbol;
+          }
+          
+          // Fix currency issues in all promotions too
+          if (perplexityData.promotionSuggestions && Array.isArray(perplexityData.promotionSuggestions)) {
+            perplexityData.promotionSuggestions.forEach(promo => {
+              if (!promo.currencyCode || promo.currencyCode === 'USD' && currencyCode !== 'USD') {
+                promo.currencyCode = currencyCode;
+              }
+              if (!promo.currencySymbol) {
+                promo.currencySymbol = currencySymbol;
+              }
+            });
+          }
+          
+          return perplexityData;
+        } else {
+          // Fall back to the default calendar if Perplexity fails
+          console.log("Using fallback promotional calendar");
+          return this.getFallbackCalendar({
+            category,
+            country,
+            subCategory,
+            currencyCode,
+            currencySymbol,
+            productName,
+            productPrice,
+            productionCost,
+            targetMargin
+          });
+        }
+      } catch (error) {
+        console.error("Error in PromotionPlanner.generatePromotionalCalendar:", error);
+        return this.getFallbackCalendar(options);
+      }
+    }
     
-    return {
-        category: category,
-        productMetrics: {
-            cost: productCost,
-            price: productPrice,
-            marginTarget: marginTarget,
-            avgMonthlySales: avgMonthlySales,
-            currentMargin: budgetInfo.currentMargin
+    async callPerplexity(params) {
+      try {
+        // Sanitize params to handle empty values gracefully
+        const { 
+          productName = "Product", 
+          category = "GENERAL", 
+          subCategory = "", 
+          country = "Global", 
+          currencyCode = "USD", 
+          currencySymbol = "",
+          productPrice = 0,
+          productionCost = 0,
+          targetMargin = 20,
+          competitors = ""
+        } = params;
+        
+        // Sanitize values to prevent "undefined" or "null" from appearing in the prompt
+        const safeProductName = productName || "Product";
+        const safeCategory = category || "GENERAL";
+        const safeSubCategory = subCategory || ""; 
+        const safeCountry = country || "Global";
+        const safeCompetitors = competitors || "No specific competitors";
+        
+        // Make sure we have valid currency information
+        const safeCurrencyCode = currencyCode || "USD";
+        // If no symbol is provided but we have a code, use the code as a fallback
+        const safeCurrencySymbol = currencySymbol || this.getCurrencySymbolForCode(safeCurrencyCode);
+        
+        // Format price values with currency information for the prompt
+        const formattedPrice = this.formatPriceWithCurrency(productPrice, safeCurrencySymbol, safeCurrencyCode);
+        const formattedCost = this.formatPriceWithCurrency(productionCost, safeCurrencySymbol, safeCurrencyCode);
+        
+        // Construct the Perplexity prompt with optional fields handled gracefully
+        let prompt = `
+  Create a data-driven promotional calendar for a ${safeProductName} in the ${safeCategory} category`;
+  
+        // Only add subcategory if it exists
+        if (safeSubCategory) {
+          prompt += ` (subcategory: ${safeSubCategory})`;
+        }
+        
+        prompt += ` in ${safeCountry}.
+  
+  Product details:
+  - Current price: ${formattedPrice}`;
+  
+        // Only add production cost if it's greater than 0
+        if (productionCost > 0) {
+          prompt += `
+  - Production cost: ${formattedCost}`;
+        }
+  
+        prompt += `
+  - Target profit margin: ${targetMargin}%`;
+        
+        // Only add competitors if they exist
+        if (safeCompetitors && safeCompetitors !== "No specific competitors") {
+          prompt += `
+  - Key competitors: ${safeCompetitors}`;
+        }
+  
+        prompt += `
+  
+  First, analyze:
+  1. Category seasonality`;
+        
+        // Add region-specific analysis if we have a specific country
+        if (safeCountry !== "Global") {
+          prompt += ` in ${safeCountry}`;
+        }
+        
+        prompt += `
+  2. Product lifecycle stage (new launch, growth, maturity, decline)
+  3. Competitive landscape and pricing strategies
+  4. Distribution channels (online vs. offline) effectiveness
+  
+  Then, design a promotional calendar with the following structure (return as JSON only):
+  {
+    "currencyCode": "${safeCurrencyCode}",
+    "currencySymbol": "${safeCurrencySymbol}",
+    "productInfo": {
+      "name": "${safeProductName}",
+      "category": "${safeCategory}",`;
+        
+        // Only include subcategory if it exists
+        if (safeSubCategory) {
+          prompt += `
+      "subCategory": "${safeSubCategory}",`;
+        }
+        
+        prompt += `
+      "lifecycleStage": "stage of product lifecycle"
+    },
+    "baseRecommendedPrice": ${productPrice},
+    "seasonalInsights": {
+      "categorySeasonality": "Description of demand fluctuations",
+      "peakShoppingWindows": [
+        {
+          "name": "Name of shopping season/event",
+          "startDate": "YYYY-MM-DD",
+          "endDate": "YYYY-MM-DD",
+          "reason": "Why this period sees higher demand",
+          "expectedSalesLift": "Estimated percentage increase"
+        }
+      ]
+    },
+    "promotionSuggestions": [
+      {
+        "type": "Type of promotion",
+        "details": "Specific description",
+        "promotionalPrice": discounted price as number,
+        "originalPrice": ${productPrice},
+        "discountValue": discount amount as number,
+        "discountUnit": "% or fixed amount",
+        "marginImpact": "Change to profit margin",
+        "durationDays": number of days,
+        "startDate": "YYYY-MM-DD",
+        "endDate": "YYYY-MM-DD",
+        "channel": "e-commerce/retail/both",
+        "timing": "Strategic timing rationale",
+        "reasoning": "Strategic business rationale",
+        "budgetEstimate": estimated promotional budget,
+        "targetKPI": "Primary success metric",
+        "expectedROI": "Estimated return on promotional investment",
+        "currencySymbol": "${safeCurrencySymbol}",
+        "currencyCode": "${safeCurrencyCode}"
+      }
+    ],`;
+        
+        // Only include competitor insights if we have competitors
+        if (safeCompetitors && safeCompetitors !== "No specific competitors") {
+          prompt += `
+    "competitorInsights": [
+      {
+        "competitorName": "Name of competitor product",
+        "price": competitor price,
+        "promotionalTrends": "Their typical promotional strategy",
+        "howToCounter": "Strategic recommendation"
+      }
+    ]`;
+        } else {
+          prompt += `
+    "competitorInsights": []`;
+        }
+        
+        prompt += `
+  }
+  
+  Include 3-4 different promotion suggestions distributed strategically throughout the year. Focus on maximizing profit while maintaining competitiveness. Use real dates in 2025.
+  
+  Return only the valid JSON object.
+        `;
+        
+        console.log("Sending query to Perplexity API...");
+        
+        // Here's where you would make the actual API call
+        // const response = await fetch('https://api.perplexity.ai/query', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer YOUR_API_KEY' },
+        //   body: JSON.stringify({ query: prompt })
+        // });
+        // const data = await response.json();
+        
+        // For now, simulate a successful response with a mock
+        // In production, replace this with the actual API call
+        const simulatedResponse = this.simulatePerplexityResponse(params);
+        
+        // Parse JSON response - in production, you'd parse the actual API response
+        return simulatedResponse;
+        
+      } catch (error) {
+        console.error("Error calling Perplexity API:", error);
+        return null;
+      }
+    }
+    
+    // Get currency symbol for a code if missing
+    getCurrencySymbolForCode(code) {
+      const symbolMap = {
+        'USD': '$',
+        'EUR': '€',
+        'GBP': '£',
+        'JPY': '¥',
+        'INR': '₹',
+        'CNY': '¥',
+        'AUD': 'A$',
+        'CAD': 'C$',
+        'RUB': '₽',
+        'HKD': 'HK$'
+      };
+      
+      return symbolMap[code] || code;
+    }
+    
+    // Format price with currency in a proper localized format
+    formatPriceWithCurrency(price, symbol, code) {
+      if (!price || isNaN(price)) return '0';
+      
+      // Format the number based on currency code
+      const formattedNumber = this.formatCurrencyValue(price, code);
+      
+      // Currency symbols that typically appear before the amount 
+      const prefixSymbols = ['$', '£', '€', '¥', '₩', '฿', '₴', '₦', 'R$', 'C$', 'A$', 'HK$', 'S$'];
+      
+      // Position symbol correctly based on common conventions
+      if (symbol && prefixSymbols.includes(symbol)) {
+        return `${symbol}${formattedNumber}`;
+      } else if (symbol) {
+        return `${formattedNumber} ${symbol}`;
+      } else {
+        // If no symbol, use the code
+        return `${formattedNumber} ${code}`;
+      }
+    }
+    
+    // This is a temporary function to simulate Perplexity response
+    // In production, this would be replaced with the actual API call
+    simulatePerplexityResponse(params) {
+      const { 
+        productName, 
+        category, 
+        subCategory, 
+        country, 
+        currencyCode, 
+        currencySymbol,
+        productPrice
+      } = params;
+      
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear();
+      
+      // Use provided currency or get a symbol based on code
+      const effectiveCurrencySymbol = currencySymbol || this.getCurrencySymbolForCode(currencyCode);
+      
+      // Base response structure that applies to any product
+      return {
+        currencyCode: currencyCode,
+        currencySymbol: effectiveCurrencySymbol,
+        productInfo: {
+          name: productName,
+          category: category,
+          subCategory: subCategory,
+          lifecycleStage: "Growth",
+          currencyCode: currencyCode,
+          currencySymbol: effectiveCurrencySymbol
         },
-        promotionSchedule: schedule
-    };
-}
-
-module.exports = {
-    categorySeasonality,
-    promotionalEvents,
-    calculatePromotionBudget,
-    recommendDiscount,
-    calculateProjectedSalesIncrease,
-    getPriorityLevel,
-    getRecommendedActions,
-    generatePromotionSchedule
-};
+        baseRecommendedPrice: productPrice,
+        seasonalInsights: {
+          categorySeasonality: `${category} products typically see demand fluctuations throughout the year with peak periods during key shopping seasons.`,
+          peakShoppingWindows: [
+            {
+              name: "Holiday Season",
+              startDate: `${currentYear}-11-15`,
+              endDate: `${currentYear}-12-25`,
+              reason: "Increased gift-giving during holiday period",
+              expectedSalesLift: "25%"
+            },
+            {
+              name: this.getCountrySpecificEvent(country),
+              startDate: this.getCountrySpecificDates(country).start,
+              endDate: this.getCountrySpecificDates(country).end,
+              reason: `Major shopping event in ${country}`,
+              expectedSalesLift: "20%"
+            }
+          ]
+        },
+        promotionSuggestions: [
+          {
+            type: "Standard Discount",
+            details: "10% off recommended price",
+            promotionalPrice: this.formatCurrencyValue(productPrice * 0.9, currencyCode),
+            originalPrice: productPrice,
+            discountValue: 10,
+            discountUnit: "%",
+            marginImpact: "Maintains acceptable margins",
+            durationDays: 7,
+            startDate: formatDate(new Date(currentDate.setDate(currentDate.getDate() + 14))),
+            endDate: formatDate(new Date(currentDate.setDate(currentDate.getDate() + 21))),
+            channel: "both",
+            timing: "General offer that can be run anytime with moderate impact",
+            reasoning: "Standard discount to attract price-sensitive customers",
+            budgetEstimate: this.formatCurrencyValue(productPrice * 0.05 * 1000, currencyCode),
+            targetKPI: "Sales volume",
+            expectedROI: "2.5x",
+            currencySymbol: effectiveCurrencySymbol,
+            currencyCode: currencyCode
+          },
+          {
+            type: "Seasonal Promotion",
+            details: "15% off for holiday season",
+            promotionalPrice: this.formatCurrencyValue(productPrice * 0.85, currencyCode),
+            originalPrice: productPrice,
+            discountValue: 15,
+            discountUnit: "%",
+            marginImpact: "Reduced but justified by volume",
+            durationDays: 14,
+            startDate: `${currentYear}-11-15`,
+            endDate: `${currentYear}-11-29`,
+            channel: "e-commerce",
+            timing: "Aligns with holiday shopping season",
+            reasoning: "Take advantage of increased buying intent",
+            budgetEstimate: this.formatCurrencyValue(productPrice * 0.08 * 2000, currencyCode),
+            targetKPI: "Market share",
+            expectedROI: "3.2x",
+            currencySymbol: effectiveCurrencySymbol,
+            currencyCode: currencyCode
+          }
+        ],
+        competitorInsights: [
+          {
+            competitorName: "Primary Competitor",
+            price: this.formatCurrencyValue(productPrice * 0.9, currencyCode),
+            promotionalTrends: "Aggressive discounting during key seasons",
+            howToCounter: "Focus on product quality and value-adds"
+          }
+        ]
+      };
+    }
+    
+    // Helper methods to generate some country-specific data for the simulation
+    getCountrySpecificEvent(country) {
+      const events = {
+        'US': 'Black Friday',
+        'IN': 'Diwali Festival',
+        'GB': 'Boxing Day',
+        'CN': 'Singles Day',
+        'JP': 'Golden Week',
+        'DE': 'Pre-Christmas Shopping',
+        'FR': 'Bastille Day Sales',
+        'BR': 'Black Friday Brazil',
+        'AU': 'Boxing Day'
+      };
+      return events[country] || 'Mid-Year Sale';
+    }
+    
+    getCountrySpecificDates(country) {
+      const currentYear = new Date().getFullYear();
+      const dates = {
+        'US': { start: `${currentYear}-11-25`, end: `${currentYear}-12-02` },
+        'IN': { start: `${currentYear}-10-15`, end: `${currentYear}-11-05` },
+        'GB': { start: `${currentYear}-12-26`, end: `${currentYear}-01-05` },
+        'CN': { start: `${currentYear}-11-11`, end: `${currentYear}-11-13` },
+        'JP': { start: `${currentYear}-04-29`, end: `${currentYear}-05-05` },
+        'DE': { start: `${currentYear}-11-30`, end: `${currentYear}-12-20` },
+        'FR': { start: `${currentYear}-07-10`, end: `${currentYear}-07-18` },
+        'BR': { start: `${currentYear}-11-25`, end: `${currentYear}-11-30` },
+        'AU': { start: `${currentYear}-12-26`, end: `${currentYear}-01-05` }
+      };
+      return dates[country] || { start: `${currentYear}-06-15`, end: `${currentYear}-06-30` };
+    }
+    
+    // Format currency value based on currency code
+    formatCurrencyValue(value, currencyCode) {
+      if (!value || isNaN(value)) return 0;
+      
+      // Currencies that don't use decimal places
+      if (['JPY', 'KRW', 'VND', 'IDR', 'CLP', 'ISK', 'HUF', 'TWD'].includes(currencyCode)) {
+        return Math.round(value);
+      }
+      
+      // Most currencies use 2 decimal places
+      return parseFloat(value.toFixed(2));
+    }
+    
+    // Fallback promotional calendar with proper currency handling
+    getFallbackCalendar(options) {
+      const { 
+        category = "GENERAL", 
+        country = "Global", 
+        subCategory = "", 
+        currencyCode = options.currency_code || 'USD', 
+        currencySymbol = options.currency_symbol || '',
+        productName = 'Product',
+        productPrice = 0
+      } = options;
+      
+      // Get a currency symbol if one isn't provided
+      const effectiveCurrencySymbol = currencySymbol || this.getCurrencySymbolForCode(currencyCode);
+      
+      const currentDate = new Date();
+      
+      const oneMonthLater = new Date(currentDate);
+      oneMonthLater.setMonth(currentDate.getMonth() + 1);
+      
+      const threeMonthsLater = new Date(currentDate);
+      threeMonthsLater.setMonth(currentDate.getMonth() + 3);
+      
+      return {
+        currencyCode: currencyCode,
+        currencySymbol: effectiveCurrencySymbol,
+        
+        productInfo: {
+          id: "product-id",
+          name: productName,
+          category: category,
+          subCategory: subCategory,
+          currencyCode: currencyCode,
+          currencySymbol: effectiveCurrencySymbol
+        },
+        baseRecommendedPrice: this.formatCurrencyValue(productPrice, currencyCode),
+        promotionSuggestions: [
+          {
+            type: "Standard Discount",
+            details: "10% off recommended price",
+            promotionalPrice: this.formatCurrencyValue(productPrice * 0.9, currencyCode),
+            originalPrice: this.formatCurrencyValue(productPrice, currencyCode),
+            discountValue: 10,
+            discountUnit: "%",
+            estimatedMargin: 0,
+            startDate: formatDate(oneMonthLater),
+            endDate: formatDate(new Date(oneMonthLater.getTime() + 7 * 24 * 60 * 60 * 1000)),
+            durationDays: 7,
+            timing: "General promotion that can be run anytime",
+            budgetEstimate: 0,
+            reasoning: "Standard discount to generate sales and interest",
+            currencySymbol: effectiveCurrencySymbol,
+            currencyCode: currencyCode
+          },
+          {
+            type: "Seasonal Promotion",
+            details: "15% off for seasonal event",
+            promotionalPrice: this.formatCurrencyValue(productPrice * 0.85, currencyCode),
+            originalPrice: this.formatCurrencyValue(productPrice, currencyCode),
+            discountValue: 15,
+            discountUnit: "%",
+            estimatedMargin: 0,
+            startDate: formatDate(threeMonthsLater),
+            endDate: formatDate(new Date(threeMonthsLater.getTime() + 14 * 24 * 60 * 60 * 1000)),
+            durationDays: 14,
+            timing: "Align with upcoming seasonal demand",
+            budgetEstimate: 0,
+            reasoning: "Take advantage of seasonal buying patterns",
+            currencySymbol: effectiveCurrencySymbol,
+            currencyCode: currencyCode
+          }
+        ],
+        seasonalInsights: {
+          categorySeasonality: `${category} products typically see demand fluctuations throughout the year.`,
+          peakShoppingWindows: [
+            {
+              name: "Holiday Season",
+              startDate: "2025-11-15",
+              endDate: "2025-12-25",
+              reason: "Increased gift-giving during holiday period",
+              expectedSalesLift: "20%"
+            }
+          ]
+        }
+      };
+    }
+  }
+  
+  // Helper function to format dates as YYYY-MM-DD
+  function formatDate(date) {
+    return date.toISOString().split('T')[0];
+  }
+  
+  module.exports = { PromotionPlanner };

@@ -1,1 +1,0 @@
-PS C:\Users\nikhi\pricing-agent> node ProductScraperLim.js "https://www.croma.com/bosch-9-kg-5-star-fully-automatic-front-load-washing-machine-series-6-wga1420pin-anti-wrinkle-feature-dark-lake-/p/303960"

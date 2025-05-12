@@ -1,6 +1,14 @@
 // ProductScraperLim.js
 console.log("LOG: Script execution started."); // VERY FIRST LOG
 
+// Make dotenv optional
+try {
+  require('dotenv').config();
+  console.log("LOG: dotenv loaded successfully, but will prioritize system environment variables");
+} catch (err) {
+  console.log("LOG: dotenv not available, using system environment variables only");
+}
+
 /**
  * Scrapes product details from a given URL using Firecrawl's v1/scrape API
  * @param {string} productUrl - The URL of the product to scrape
@@ -16,8 +24,8 @@ async function scrapeProductDetails(productUrl, apiKey) {
       throw new Error('Product URL is required and must be a string');
     }
     if (!apiKey || typeof apiKey !== 'string') {
-      console.error("ERROR: API key is required and must be a string.");
-      throw new Error('API key is required and must be a string');
+      console.error("ERROR: Firecrawl API key is required and must be a string.");
+      throw new Error('Firecrawl API key is required and must be a string');
     }
 
     console.log(`LOG: Starting product scraping for ${productUrl} using v1/scrape with jsonOptions.`);
@@ -156,11 +164,12 @@ if (require.main === module) {
 
   if (!FIRECRAWL_API_KEY) {
     console.error("ERROR: FIRECRAWL_API_KEY is not set in environment variables.");
-    console.error("Please ensure FIRECRAWL_API_KEY is set properly as an environment variable.");
+    console.error("Please set the FIRECRAWL_API_KEY environment variable before running this script.");
     process.exitCode = 1; // Use exitCode to allow logs to flush
     return; // Exit after setting code
   }
 
+ 
   const args = process.argv.slice(2);
   console.log("LOG: Command line arguments received:", args);
 

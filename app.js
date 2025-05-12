@@ -1,7 +1,16 @@
-// app.js - Using Environment Variables Only
+// app.js - Fixed Session Management and PromotionPlanner integration
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+
+// Make dotenv optional
+try {
+  require('dotenv').config();
+  console.log("LOG: dotenv loaded successfully, but will prioritize system environment variables");
+} catch (err) {
+  console.log("LOG: dotenv not available, using system environment variables only");
+}
+
 const { scrapeProductDetails } = require('./ProductScraperLim');
 const findCompetitors = require('./CompetitorFinder');
 const { PricingEngine } = require('./PricingEngine');
@@ -19,19 +28,20 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Check for API keys
+// Check for API keys with more informative messages
 if (!FIRECRAWL_API_KEY) {
-    console.error('ERROR: FIRECRAWL_API_KEY is not set in environment variables');
-    process.exit(1);
+    console.warn('WARNING: FIRECRAWL_API_KEY is not set in environment variables');
+    console.warn('Set this environment variable before running the application');
 }
 if (!PERPLEXITY_API_KEY) {
-    console.error('ERROR: PERPLEXITY_API_KEY is not set in environment variables');
-    process.exit(1);
+    console.warn('WARNING: PERPLEXITY_API_KEY is not set in environment variables');
+    console.warn('Set this environment variable before running the application');
 }
 if (!SERPER_API_KEY) {
-    console.error('ERROR: SERPER_API_KEY is not set in environment variables');
-    process.exit(1);
+    console.warn('WARNING: SERPER_API_KEY is not set in environment variables');
+    console.warn('Set this environment variable before running the application');
 }
+
 
 // In-memory storage for session data
 const sessionData = new Map();
@@ -52,7 +62,7 @@ app.get('/api/analyze-product', async (req, res) => {
     }
     
     const sessionId = generateSessionId();
-    console.log(`LOG: Generated session ID: ${sessionId}`);
+    console.log(`LOG: Generated session ID: ${sessionId}`); // Add this log
     
     res.writeHead(200, {
         'Content-Type': 'text/event-stream',
@@ -91,7 +101,7 @@ app.get('/api/analyze-product', async (req, res) => {
             competitorUrls: [],   
             timestamp: Date.now()
         });
-        console.log(`LOG: [${sessionId}] Session data stored`);
+        console.log(`LOG: [${sessionId}] Session data stored`); // Add this log
 
         sendUpdate('status', 'Finding competitors...');
         const competitorResult = await findCompetitors(
@@ -156,7 +166,7 @@ app.get('/api/analyze-product', async (req, res) => {
         console.log(`LOG: [${sessionId}] Product analysis completed.`);
         // Send session ID one more time in the complete event
         sendUpdate('complete', `Analysis completed. Session ID: ${sessionId}`);
-        console.log(`LOG: [${sessionId}] Available sessions:`, Array.from(sessionData.keys()));
+        console.log(`LOG: [${sessionId}] Available sessions:`, Array.from(sessionData.keys())); // Add this log
         
     } catch (error) {
         console.error(`ERROR: [${sessionId}] Error during product analysis:`, error.stack || error);
@@ -173,8 +183,8 @@ app.post('/api/optimize-price', async (req, res) => {
     console.log('LOG: Received optimize-price request:', req.body);
     const { sessionId, productionCost, salesPerMonth, targetMargin } = req.body;
     
-    console.log(`LOG: Looking for session: ${sessionId}`);
-    console.log(`LOG: Available sessions:`, Array.from(sessionData.keys()));
+    console.log(`LOG: Looking for session: ${sessionId}`); // Add this log
+    console.log(`LOG: Available sessions:`, Array.from(sessionData.keys())); // Add this log
     
     if (!sessionId || productionCost === undefined || salesPerMonth === undefined || targetMargin === undefined) {
         console.error('ERROR: Missing required fields for price optimization:', req.body);
@@ -184,7 +194,7 @@ app.post('/api/optimize-price', async (req, res) => {
     const data = sessionData.get(sessionId);
     if (!data) {
         console.error('ERROR: Session not found for ID:', sessionId);
-        console.log('DEBUGGING: Available sessions are:', Array.from(sessionData.keys()));
+        console.log('DEBUGGING: Available sessions are:', Array.from(sessionData.keys())); // Add debugging info
         return res.status(404).json({ success: false, error: 'Session not found. Please re-analyze the product first.' });
     }
     
@@ -204,40 +214,88 @@ app.post('/api/optimize-price', async (req, res) => {
         const pricingEngine = new PricingEngine(
             productionCost, salesPerMonth, targetMargin, productDetails.price, competitorPrices
         );
-        const pricingStrategyOutput = pricingEngine.getProductStrategies();
-        console.log(`LOG: [${sessionId}] Pricing strategy calculated:`, pricingStrategyOutput.optimizedStrategy.name);
+
+        // Make sure to properly await the strategy and handle its result
+        const pricingStrategyOutput = await pricingEngine.getProductStrategies();
         
-        // Initialize the promotion planner
+        // Add extra safety check
+        if (!pricingStrategyOutput) {
+            console.error(`ERROR: [${sessionId}] Pricing strategy output is undefined`);
+            return res.status(500).json({ success: false, error: 'Failed to generate pricing strategy.' });
+        }
+        
+        // Log the output to help debug
+        console.log(`LOG: [${sessionId}] Pricing strategy calculated:`, 
+            pricingStrategyOutput?.optimizedStrategy?.name || 'Unnamed strategy');
+        
+        // Initialize the promotion planner with COMPLETE product details
         const planner = new PromotionPlanner();
         const promoCalendarInput = {
+            // Add ALL product details needed for proper promotions
+            productName: productDetails.name,
             category: (productDetails.category || 'GENERAL').toUpperCase(),
             country: (productDetails.country_code || 'US').toUpperCase(), 
-            subCategory: productDetails.subcategory ? productDetails.subcategory.toUpperCase() : undefined
+            subCategory: productDetails.subcategory ? productDetails.subcategory.toUpperCase() : '',
+            productPrice: productDetails.price,
+            productionCost: productionCost,
+            targetMargin: targetMargin,
+            currencyCode: productDetails.currency_code || 'USD',
+            currencySymbol: productDetails.currency_symbol || productDetails.currency || '$',
+            competitors: competitorDetails.map(c => c.name || 'Unknown Competitor').filter(Boolean)
         };
+        
         console.log(`LOG: [${sessionId}] Input for Promotion Planner:`, promoCalendarInput);
         
-        // Generate promotional calendar
-        const promotionCalendar = planner.generatePromotionalCalendar(promoCalendarInput);
+        // Generate promotional calendar - make sure to await if it returns a Promise
+        const promotionCalendar = await planner.generatePromotionalCalendar(promoCalendarInput);
+        
+        if (!promotionCalendar) {
+            console.error(`ERROR: [${sessionId}] Promotion calendar output is undefined`);
+            return res.status(500).json({ success: false, error: 'Failed to generate promotion calendar.' });
+        }
+        
         console.log(`LOG: [${sessionId}] Promotion calendar generated successfully.`);
         
         const avgCompPrice = competitorPrices.length > 0 ? competitorPrices.reduce((a, b) => a + b, 0) / competitorPrices.length : 0;
 
+        // Add null checks for every property to prevent errors
         res.json({
             success: true,
             productDetails: {
-                name: productDetails.name, 
-                currentPrice: productDetails.price,
-                currency: productDetails.currency_symbol || productDetails.currency || '$',
-                currencyCode: productDetails.currency_code || 'USD'
+                name: productDetails?.name || "Product", // Added null check
+                currentPrice: productDetails?.price || 0,
+                currency: productDetails?.currency_symbol || productDetails?.currency || '$',
+                currencyCode: productDetails?.currency_code || 'USD'
             },
-            strategy: pricingStrategyOutput,
+            strategy: pricingStrategyOutput || {
+                currentPrice: productDetails?.price || 0,
+                optimizedPrice: productDetails?.price || 0,
+                competitorsPriceRange: { min: 0, max: 0 },
+                marginAnalysis: { 
+                    productCost: productionCost,
+                    targetMargin: targetMargin,
+                    actualMargin: 0
+                },
+                optimizedStrategy: {
+                    name: "Default Strategy",
+                    description: "Fallback strategy due to processing error"
+                }
+            },
             competitorAnalysis: {
                 averagePrice: parseFloat(avgCompPrice.toFixed(2)),
                 minPrice: competitorPrices.length > 0 ? Math.min(...competitorPrices) : 0,
                 maxPrice: competitorPrices.length > 0 ? Math.max(...competitorPrices) : 0,
                 numberOfCompetitors: competitorPrices.length
             },
-            promotionCalendar: promotionCalendar 
+            promotionCalendar: promotionCalendar || {
+                productInfo: {
+                    id: "product-id",
+                    name: productDetails?.name || "Product",
+                    category: productDetails?.category || "GENERAL",
+                    currencyCode: productDetails?.currency_code || 'USD'
+                },
+                promotionSuggestions: []
+            }
         });
         
     } catch (error) {

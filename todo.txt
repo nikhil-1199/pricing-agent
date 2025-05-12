@@ -1,0 +1,8 @@
+Bugs:
+
+
+To Do:
+1. firecrawl struggles to get the original price next to a slashed price 
+2. if the competitor price is 0 dont include that in that in the pricing analysis 
+3. parallel scrapping 
+

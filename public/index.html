@@ -4,622 +4,1012 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dynamic Pricing Agent</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        
-        .container {
-            background-color: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        h1 {
+            background-color: #f8f9fa;
             color: #333;
-            text-align: center;
-            margin-bottom: 30px;
         }
-        
-        .input-section {
-            margin-bottom: 30px;
+        .header {
+            background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+            color: white;
+            padding: 1.5rem 0;
+            margin-bottom: 2rem;
         }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #555;
-        }
-        
-        input[type="url"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 16px;
-            margin-bottom: 15px;
-            box-sizing: border-box;
-        }
-        
-        .buttons {
-            text-align: center;
-        }
-        
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
             border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 0 10px;
         }
-        
-        #analyzeBtn {
-            background-color: #007bff;
-            color: white;
+        .card-header {
+            border-radius: 10px 10px 0 0 !important;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e3e6f0;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
         }
-        
-        #analyzeBtn:hover {
-            background-color: #0056b3;
+        .card-body {
+            padding: 1.5rem;
         }
-        
-        #analyzeBtn:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
+        .btn-primary {
+            background-color: #4e73df;
+            border-color: #4e73df;
         }
-        
-        #clearBtn {
-            background-color: #6c757d;
-            color: white;
+        .btn-primary:hover {
+            background-color: #2e59d9;
+            border-color: #2e59d9;
         }
-        
-        #clearBtn:hover {
-            background-color: #5a6268;
+        .progress {
+            height: 0.8rem;
+            border-radius: 0.25rem;
         }
-        
-        #status {
-            text-align: center;
-            margin: 20px 0;
-            color: #007bff;
-            display: none;
-            font-style: italic;
+        .badge {
+            font-size: 0.85em;
+            padding: 0.35em 0.65em;
         }
-        
-        #error {
+        .currency-symbol {
+            font-weight: normal;
+            color: #6c757d;
+        }
+        .price-large {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4e73df;
+        }
+        .price-strikethrough {
+            text-decoration: line-through;
             color: #dc3545;
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-            display: none;
         }
-        
-        #results {
-            margin-top: 30px;
-            display: none;
-        }
-        
-        .product-details {
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 5px;
-            border: 1px solid #e9ecef;
-            margin-bottom: 30px;
-        }
-        
-        .product-details h2 {
-            color: #495057;
-            margin-top: 0;
-            border-bottom: 2px solid #dee2e6;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .detail-item {
-            margin: 10px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .detail-label {
-            font-weight: bold;
+        .tooltip-icon {
             color: #6c757d;
+            cursor: pointer;
         }
-        
-        .detail-value {
-            color: #495057;
-            text-align: right;
-            max-width: 60%;
-            word-wrap: break-word;
+        .competitor-item {
+            border-left: 4px solid #4e73df;
+            padding-left: 1rem;
+            margin-bottom: 1rem;
         }
-        
-        .product-image {
-            max-width: 200px;
-            margin: 10px 0;
-            border-radius: 5px;
-            display: block;
+        .promotion-card {
+            border-left: 4px solid #2ecc71;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f8fff9;
+            border-radius: 0.5rem;
         }
-        
-        .price-highlight {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #28a745;
+        .calendar-item {
+            border-left: 4px solid #f39c12;
+            padding: 0.5rem 1rem;
+            margin-bottom: 0.5rem;
+            background-color: #fffaf3;
+            border-radius: 0.25rem;
         }
-        
-        .competitors-section {
-            margin-top: 30px;
-        }
-        
-        .competitors-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .competitor-card {
-            border: 1px solid #dee2e6;
+        .status-container {
+            background-color: #f1f3f9;
             border-radius: 8px;
-            padding: 15px;
-            background-color: #ffffff;
-            min-height: 150px;
-            position: relative;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #4e73df;
         }
-        
-        .competitor-card.loading {
-            background-color: #f8f9fa;
-            border-color: #e9ecef;
+        .chart-container {
+            height: 300px;
+            margin-bottom: 1.5rem;
         }
-        
-        .competitor-card.loading::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, transparent, #007bff, transparent);
-            animation: loading 1s ease-in-out infinite;
-        }
-        
-        @keyframes loading {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-        
-        .competitor-card h3 {
-            margin-top: 0;
-            color: #495057;
-            font-size: 1.1em;
-            border-bottom: 1px solid #dee2e6;
-            padding-bottom: 5px;
-            margin-bottom: 10px;
-        }
-        
-        .competitor-url {
-            color: #007bff;
-            text-decoration: none;
-            font-size: 0.9em;
-            word-wrap: break-word;
-            display: block;
-            margin-top: 5px;
-        }
-        
-        .competitor-url:hover {
-            text-decoration: underline;
-        }
-        
-        .no-competitors {
-            text-align: center;
-            color: #6c757d;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-        }
-        
-        .warning {
-            color: #856404;
-            background-color: #fff3cd;
-            border: 1px solid #ffeeba;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            font-size: 0.9em;
-        }
-        
-        .skeleton {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-            background-size: 200% 100%;
-            animation: skeleton 1.5s infinite;
-            height: 20px;
-            margin: 10px 0;
-            border-radius: 4px;
-        }
-        
-        @keyframes skeleton {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-        
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #007bff;
+        .loading-pulse {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
+            background-color: #4e73df;
+            animation: pulse 1.5s infinite ease-in-out;
+            margin-right: 0.5rem;
         }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.5; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Dynamic Pricing Agent</h1>
-        
-        <div class="input-section">
-            <label for="productUrl">Product URL:</label>
-            <input type="url" id="productUrl" placeholder="Enter product URL (e.g., https://www.amazon.com/dp/B0863FR3S9)" required>
-            
-            <div class="buttons">
-                <button id="analyzeBtn">Analyze</button>
-                <button id="clearBtn">Clear</button>
-            </div>
-        </div>
-        
-        <div id="status"></div>
-        <div id="error"></div>
-        
-        <div id="results">
-            <div class="product-details">
-                <h2>Product Details</h2>
-                <div id="productDetails"></div>
-            </div>
-            
-            <div class="competitors-section">
-                <h2>Competitors</h2>
-                <div id="competitorsList"></div>
+    <div class="header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1><i class="bi bi-graph-up-arrow"></i> Dynamic Pricing Agent</h1>
+                    <p class="mb-0">Optimize your product pricing and promotion strategy with AI-powered market analysis</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <span class="badge bg-light text-dark">
+                        <i class="bi bi-lightning-charge-fill text-warning"></i> 
+                        AI-Enhanced
+                    </span>
+                </div>
             </div>
         </div>
     </div>
 
+    <div class="container">
+        <!-- Product URL Input -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-link-45deg"></i> Step 1: Enter Product URL</span>
+                <span class="badge bg-primary" id="step1-status">Current</span>
+            </div>
+            <div class="card-body">
+                <div class="input-group mb-3">
+                    <input type="text" id="productUrl" class="form-control" placeholder="https://www.example.com/product/12345" aria-label="Product URL">
+                    <button class="btn btn-primary" type="button" id="analyzeBtn">
+                        <i class="bi bi-search"></i> Analyze
+                    </button>
+                </div>
+                <div id="status-container" class="status-container d-none">
+                    <div class="loading-pulse"></div>
+                    <span id="status-message">Processing...</span>
+                </div>
+                <div class="alert alert-danger d-none" id="error-alert" role="alert"></div>
+            </div>
+        </div>
+
+        <!-- Product Details -->
+        <div class="card d-none" id="product-details-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-tag"></i> Step 2: Product Details</span>
+                <span class="badge bg-secondary" id="step2-status">Waiting</span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3 mb-md-0">
+                        <img id="product-image" src="https://via.placeholder.com/200" alt="Product Image" class="img-fluid rounded mb-2" style="max-height: 200px;">
+                    </div>
+                    <div class="col-md-8">
+                        <h3 id="product-name">Product Name</h3>
+                        <div class="mb-2">
+                            <span class="badge bg-secondary" id="product-category">Category</span>
+                            <span class="badge bg-light text-dark" id="product-company">Brand</span>
+                        </div>
+                        <p id="product-description" class="text-muted">Product description will appear here.</p>
+                        <div class="mt-3">
+                            <span class="text-muted">Current Price: </span>
+                            <span class="h4">
+                                <span id="product-currency" class="currency-symbol">$</span>
+                                <span id="product-price">0.00</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Competitor Analysis -->
+        <div class="card d-none" id="competitor-analysis-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-bar-chart"></i> Step 3: Competitor Analysis</span>
+                <span class="badge bg-secondary" id="step3-status">Waiting</span>
+            </div>
+            <div class="card-body">
+                <div class="mb-3" id="competitors-status">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Searching for competitors...
+                    </div>
+                </div>
+                <div id="competitors-container"></div>
+            </div>
+        </div>
+
+        <!-- Pricing Strategy Input -->
+        <div class="card d-none" id="pricing-inputs-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-gear"></i> Step 4: Pricing Strategy Inputs</span>
+                <span class="badge bg-secondary" id="step4-status">Waiting</span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="productionCost" class="form-label">Production Cost</label>
+                        <div class="input-group">
+                            <span class="input-group-text currency-input-symbol" id="input-currency">$</span>
+                            <input type="number" class="form-control" id="productionCost" placeholder="Enter cost" step="0.01" min="0">
+                        </div>
+                        <div class="form-text">Your cost to produce or acquire the product</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="salesPerMonth" class="form-label">Monthly Sales Volume</label>
+                        <input type="number" class="form-control" id="salesPerMonth" placeholder="Enter units sold" step="1" min="0">
+                        <div class="form-text">Average number of units sold per month</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="targetMargin" class="form-label">Target Margin (%)</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="targetMargin" placeholder="Enter margin" step="1" min="0" max="100">
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <div class="form-text">Your desired profit margin percentage</div>
+                    </div>
+                </div>
+                <!-- Add this new element for displaying input suggestions -->
+                <div id="pricing-inputs-hint" class="alert alert-light small mb-3"></div>
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button class="btn btn-primary" id="optimizeBtn">
+                        <i class="bi bi-lightning-charge"></i> Optimize Price & Generate Promotions
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pricing Strategy Results -->
+        <div class="card d-none" id="pricing-results-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-graph-up"></i> Step 5: Pricing Strategy</span>
+                <span class="badge bg-secondary" id="step5-status">Waiting</span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Recommended Price</h5>
+                                <div class="price-large mb-2">
+                                    <span id="currency-symbol-optimized" class="currency-symbol">$</span>
+                                    <span id="optimized-price">0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-center">
+                                    <span id="current-price-display" class="me-2">
+                                        Current: <span id="currency-symbol-current" class="currency-symbol">$</span><span id="current-price">0.00</span>
+                                    </span>
+                                    <span id="price-change-percentage" class="badge"></span>
+                                </div>
+                                <div class="mt-3">
+                                    <span class="badge bg-primary" id="strategy-name">Balanced Pricing</span>
+                                </div>
+                                <p class="card-text mt-3" id="strategy-description">Strategy description</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">Margin Analysis</h5>
+                                <table class="table table-sm">
+                                    <tbody>
+                                        <tr>
+                                            <td>Target Margin</td>
+                                            <td class="text-end"><span id="target-margin">0</span>%</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Achieved Margin</td>
+                                            <td class="text-end"><span id="actual-margin">0</span>%</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Production Cost</td>
+                                            <td class="text-end"><span id="currency-symbol-cost" class="currency-symbol">$</span><span id="production-cost">0.00</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Profit per Unit</td>
+                                            <td class="text-end"><span id="currency-symbol-profit" class="currency-symbol">$</span><span id="profit-per-unit">0.00</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="mt-3">
+                                    <h6>Market Position</h6>
+                                    <div class="progress">
+                                        <div id="market-position-indicator" class="progress-bar" role="progressbar" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-1">
+                                        <span class="small">Value</span>
+                                        <span class="small">Average</span>
+                                        <span class="small">Premium</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <h5>Market Insights</h5>
+                        <div class="alert alert-light" id="market-insights">
+                            Market insights will appear here.
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h5>Alternative Strategies</h5>
+                        <div id="alternative-strategies-container">
+                            <!-- Alternative strategies will be inserted here -->
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Competitor Price Analysis</h5>
+                        <div class="card">
+                            <div class="card-body">
+                                <table class="table table-sm">
+                                    <tbody>
+                                        <tr>
+                                            <td>Average Competitor Price</td>
+                                            <td class="text-end"><span id="currency-symbol-avg" class="currency-symbol">$</span><span id="avg-competitor-price">0.00</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Lowest Competitor Price</td>
+                                            <td class="text-end"><span id="currency-symbol-min" class="currency-symbol">$</span><span id="min-competitor-price">0.00</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Highest Competitor Price</td>
+                                            <td class="text-end"><span id="currency-symbol-max" class="currency-symbol">$</span><span id="max-competitor-price">0.00</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Number of Competitors</td>
+                                            <td class="text-end"><span id="num-competitors">0</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Promotional Calendar -->
+        <div class="card d-none" id="promotion-calendar-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-calendar-event"></i> Step 6: Promotional Calendar</span>
+                <span class="badge bg-secondary" id="step6-status">Waiting</span>
+            </div>
+            <div class="card-body">
+                <div id="promotions-container">
+                    <!-- Promotions will be inserted here -->
+                </div>
+                <div class="mt-4">
+                    <h5>Seasonal Insights</h5>
+                    <div class="alert alert-light" id="seasonal-insights">
+                        Seasonal insights will appear here.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-light py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-0">Dynamic Pricing Agent &copy; 2025 | <a href="#" class="text-decoration-none">Documentation</a></p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const productUrlInput = document.getElementById('productUrl');
+            // DOM Elements
+            const productUrl = document.getElementById('productUrl');
             const analyzeBtn = document.getElementById('analyzeBtn');
-            const clearBtn = document.getElementById('clearBtn');
-            const status = document.getElementById('status');
-            const error = document.getElementById('error');
-            const results = document.getElementById('results');
-            const productDetails = document.getElementById('productDetails');
-            const competitorsList = document.getElementById('competitorsList');
+            const statusContainer = document.getElementById('status-container');
+            const statusMessage = document.getElementById('status-message');
+            const errorAlert = document.getElementById('error-alert');
             
-            let competitorCards = {};
+            const productDetailsCard = document.getElementById('product-details-card');
+            const productImage = document.getElementById('product-image');
+            const productName = document.getElementById('product-name');
+            const productCategory = document.getElementById('product-category');
+            const productCompany = document.getElementById('product-company');
+            const productDescription = document.getElementById('product-description');
+            const productPrice = document.getElementById('product-price');
+            const productCurrency = document.getElementById('product-currency');
             
-            analyzeBtn.addEventListener('click', async function() {
-                const productUrl = productUrlInput.value.trim();
+            const competitorAnalysisCard = document.getElementById('competitor-analysis-card');
+            const competitorsStatus = document.getElementById('competitors-status');
+            const competitorsContainer = document.getElementById('competitors-container');
+            
+            const pricingInputsCard = document.getElementById('pricing-inputs-card');
+            const productionCost = document.getElementById('productionCost');
+            const salesPerMonth = document.getElementById('salesPerMonth');
+            const targetMargin = document.getElementById('targetMargin');
+            const optimizeBtn = document.getElementById('optimizeBtn');
+            const inputCurrency = document.getElementById('input-currency');
+            
+            const pricingResultsCard = document.getElementById('pricing-results-card');
+            const optimizedPrice = document.getElementById('optimized-price');
+            const currentPrice = document.getElementById('current-price');
+            const priceChangePercentage = document.getElementById('price-change-percentage');
+            const strategyName = document.getElementById('strategy-name');
+            const strategyDescription = document.getElementById('strategy-description');
+            const targetMarginDisplay = document.getElementById('target-margin');
+            const actualMargin = document.getElementById('actual-margin');
+            const productionCostDisplay = document.getElementById('production-cost');
+            const profitPerUnit = document.getElementById('profit-per-unit');
+            const marketPositionIndicator = document.getElementById('market-position-indicator');
+            const marketInsights = document.getElementById('market-insights');
+            const alternativeStrategiesContainer = document.getElementById('alternative-strategies-container');
+            const avgCompetitorPrice = document.getElementById('avg-competitor-price');
+            const minCompetitorPrice = document.getElementById('min-competitor-price');
+            const maxCompetitorPrice = document.getElementById('max-competitor-price');
+            const numCompetitors = document.getElementById('num-competitors');
+            
+            const promotionCalendarCard = document.getElementById('promotion-calendar-card');
+            const promotionsContainer = document.getElementById('promotions-container');
+            const seasonalInsights = document.getElementById('seasonal-insights');
+            
+            // Status badges
+            const step1Status = document.getElementById('step1-status');
+            const step2Status = document.getElementById('step2-status');
+            const step3Status = document.getElementById('step3-status');
+            const step4Status = document.getElementById('step4-status');
+            const step5Status = document.getElementById('step5-status');
+            const step6Status = document.getElementById('step6-status');
+            
+            // Currency symbols
+            const currencySymbolOptimized = document.getElementById('currency-symbol-optimized');
+            const currencySymbolCurrent = document.getElementById('currency-symbol-current');
+            const currencySymbolCost = document.getElementById('currency-symbol-cost');
+            const currencySymbolProfit = document.getElementById('currency-symbol-profit');
+            const currencySymbolAvg = document.getElementById('currency-symbol-avg');
+            const currencySymbolMin = document.getElementById('currency-symbol-min');
+            const currencySymbolMax = document.getElementById('currency-symbol-max');
+            
+            // State variables
+            let productData = null;
+            let competitorData = [];
+            let sessionId = null;
+            let eventSource = null;
+            
+            // Format currency based on currency code
+            function formatCurrencyValue(value, currencyCode) {
+                if (!value || isNaN(parseFloat(value))) return '0';
                 
-                if (!productUrl) {
-                    showError('Please enter a product URL');
+                value = parseFloat(value);
+                
+                // Currencies that don't use decimal places
+                if (['JPY', 'KRW', 'VND', 'IDR', 'CLP', 'ISK', 'HUF', 'TWD'].includes(currencyCode)) {
+                    return Math.round(value).toString();
+                }
+                
+                // Currencies that use 3 decimal places
+                if (['BHD', 'IQD', 'JOD', 'KWD', 'LYD', 'OMR', 'TND'].includes(currencyCode)) {
+                    return value.toFixed(3);
+                }
+                
+                // Most currencies use 2 decimal places
+                return value.toFixed(2);
+            }
+            
+            // Format currency
+            function formatCurrency(value, decimals = 2) {
+                const currencyCode = productData ? productData.currency_code : 'USD';
+                return formatCurrencyValue(value, currencyCode);
+            }
+            
+            // Update status message
+            function updateStatus(message, show = true) {
+                statusMessage.textContent = message;
+                statusContainer.classList.toggle('d-none', !show);
+            }
+            
+            // Show error message
+            function showError(message) {
+                errorAlert.textContent = message;
+                errorAlert.classList.remove('d-none');
+                updateStatus('', false);
+            }
+            
+            // Hide error message
+            function hideError() {
+                errorAlert.classList.add('d-none');
+            }
+            
+            // Update step status
+            function updateStepStatus(step, status) {
+                const badgeElement = document.getElementById(`step${step}-status`);
+                if (!badgeElement) return;
+                
+                badgeElement.textContent = status;
+                badgeElement.className = 'badge';
+                
+                switch (status.toLowerCase()) {
+                    case 'current':
+                        badgeElement.classList.add('bg-primary');
+                        break;
+                    case 'completed':
+                        badgeElement.classList.add('bg-success');
+                        break;
+                    case 'in progress':
+                        badgeElement.classList.add('bg-warning', 'text-dark');
+                        break;
+                    case 'waiting':
+                        badgeElement.classList.add('bg-secondary');
+                        break;
+                    default:
+                        badgeElement.classList.add('bg-secondary');
+                }
+            }
+            
+            // Analyze Product
+            analyzeBtn.addEventListener('click', function() {
+                const url = productUrl.value.trim();
+                if (!url) {
+                    showError('Please enter a valid product URL');
                     return;
                 }
                 
-                if (!isValidUrl(productUrl)) {
-                    showError('Please enter a valid URL');
-                    return;
+                // Reset state
+                hideError();
+                updateStatus('Initializing analysis...');
+                resetUI();
+                
+                // Close any existing event source
+                if (eventSource) {
+                    eventSource.close();
                 }
                 
-                // Reset UI state
-                status.style.display = 'block';
-                error.style.display = 'none';
-                results.style.display = 'none';
-                analyzeBtn.disabled = true;
-                competitorCards = {};
+                // Start analysis with SSE (Server-Sent Events)
+                const encodedUrl = encodeURIComponent(url);
+                eventSource = new EventSource(`/api/analyze-product?productUrl=${encodedUrl}`);
                 
-                // Set up Server-Sent Events with fetch for SSE
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minute timeout
+                eventSource.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    processServerEvent(data);
+                };
                 
-                try {
-                    const response = await fetch('/api/analyze-product?productUrl=' + encodeURIComponent(productUrl), {
-                        method: 'GET',
-                        headers: {
-                            'Accept': 'text/event-stream',
-                        },
-                        signal: controller.signal
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    
-                    const reader = response.body.getReader();
-                    const decoder = new TextDecoder();
-                    
-                    let buffer = '';
-                    
-                    // Read the stream
-                    while (true) {
-                        const { value, done } = await reader.read();
-                        if (done) break;
-                        
-                        buffer += decoder.decode(value, { stream: true });
-                        const lines = buffer.split('\n');
-                        
-                        // Process complete SSE messages
-                        for (let i = 0; i < lines.length - 1; i++) {
-                            const line = lines[i].trim();
-                            if (line.startsWith('data: ')) {
-                                try {
-                                    const data = JSON.parse(line.slice(6));
-                                    handleStreamUpdate(data);
-                                } catch (e) {
-                                    console.error('Error parsing SSE data:', e);
-                                }
-                            }
-                        }
-                        
-                        // Keep the incomplete line in the buffer
-                        buffer = lines[lines.length - 1];
-                    }
-                    
-                } catch (error) {
-                    console.error('Fetch error:', error);
-                    showError('Connection error. Please try again.');
-                    analyzeBtn.disabled = false;
-                } finally {
-                    clearTimeout(timeoutId);
+                eventSource.onerror = function(error) {
+                    console.error('EventSource error:', error);
+                    eventSource.close();
+                    showError('Connection to server lost. Please try again.');
+                };
+                
+                updateStepStatus(1, 'In Progress');
+            });
+            
+            // Process server events from SSE
+            function processServerEvent(data) {
+                // Save session ID
+                if (data.sessionId) {
+                    sessionId = data.sessionId;
+                    console.log('Session ID received:', sessionId);
                 }
-            });
-            
-            clearBtn.addEventListener('click', function() {
-                productUrlInput.value = '';
-                error.style.display = 'none';
-                results.style.display = 'none';
-                status.style.display = 'none';
-                competitorCards = {};
-            });
-            
-            productUrlInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    analyzeBtn.click();
-                }
-            });
-            
-            function handleStreamUpdate(update) {
-                switch (update.type) {
+                
+                switch (data.type) {
                     case 'status':
-                        status.textContent = update.data;
+                        updateStatus(data.data);
                         break;
                         
                     case 'productDetails':
-                        displayProductDetails(update.data);
-                        results.style.display = 'block';
+                        handleProductDetails(data.data);
                         break;
                         
                     case 'competitorUrls':
-                        initializeCompetitorCards(update.data);
-                        break;
-                        
-                    case 'competitorError':
-                        showCompetitorError(update.data);
+                        updateStatus(`Found ${data.data.length} competitors. Scraping details...`);
+                        updateCompetitorsStatus(`<div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Found ${data.data.length} competitors. Scraping details...
+                        </div>`);
                         break;
                         
                     case 'competitorDetails':
-                        updateCompetitorCard(update.data);
+                        handleCompetitorDetails(data.data);
                         break;
                         
                     case 'competitorScrapingError':
-                        updateCompetitorCardError(update.data);
+                        console.warn('Competitor scraping error:', data.data);
                         break;
                         
-                    case 'complete':
-                        status.textContent = 'Analysis completed successfully!';
-                        analyzeBtn.disabled = false;
-                        setTimeout(() => {
-                            status.style.display = 'none';
-                        }, 3000);
+                    case 'competitorError':
+                        updateCompetitorsStatus(`<div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i> ${data.data}
+                        </div>`);
                         break;
                         
                     case 'error':
-                        showError(update.data);
-                        analyzeBtn.disabled = false;
+                        eventSource.close();
+                        showError(data.data);
+                        updateStepStatus(1, 'Current');
+                        break;
+                        
+                    case 'complete':
+                        eventSource.close();
+                        updateStatus('', false);
+                        updateStepStatus(1, 'Completed');
+                        updateStepStatus(2, 'Completed');
+                        updateStepStatus(3, 'Completed');
+                        updateStepStatus(4, 'Current');
+                        
+                        // Show pricing inputs card
+                        pricingInputsCard.classList.remove('d-none');
                         break;
                 }
             }
             
-            function showError(message) {
-                error.textContent = message;
-                error.style.display = 'block';
-                status.style.display = 'none';
-            }
-            
-            function isValidUrl(string) {
-                try {
-                    new URL(string);
-                    return true;
-                } catch (_) {
-                    return false;
-                }
-            }
-            
-            function displayProductDetails(details) {
-                productDetails.innerHTML = '';
+            // Handle product details
+            function handleProductDetails(product) {
+                productData = product;
                 
-                // Helper function to create detail items
-                function addDetailItem(label, value, isPrice = false) {
-                    if (value !== null && value !== undefined && value !== '') {
-                        const div = document.createElement('div');
-                        div.className = 'detail-item';
-                        
-                        const labelSpan = document.createElement('span');
-                        labelSpan.className = 'detail-label';
-                        labelSpan.textContent = label + ':';
-                        
-                        const valueSpan = document.createElement('span');
-                        valueSpan.className = 'detail-value' + (isPrice ? ' price-highlight' : '');
-                        valueSpan.textContent = value;
-                        
-                        div.appendChild(labelSpan);
-                        div.appendChild(valueSpan);
-                        productDetails.appendChild(div);
+                // Update product details card
+                productDetailsCard.classList.remove('d-none');
+                productName.textContent = product.name || 'Product Name';
+                productCategory.textContent = product.category || 'Category';
+                productCompany.textContent = product.company || 'Brand';
+                productDescription.textContent = product.description || 'No description available.';
+                productPrice.textContent = formatCurrency(product.price);
+                
+                // Update currency information
+                const currencySymbol = product.currency_symbol || product.currency || '$';
+                productCurrency.textContent = currencySymbol;
+                
+                // Update product image if available
+                if (product.product_image_url) {
+                    productImage.src = product.product_image_url;
+                } else {
+                    productImage.src = 'https://via.placeholder.com/200?text=No+Image';
+                }
+                
+                // Update ALL currency displays with the product's currency
+                document.querySelectorAll('.currency-symbol').forEach(el => {
+                    el.textContent = currencySymbol;
+                });
+                
+                // Update currency in input group
+                document.getElementById('input-currency').textContent = currencySymbol;
+                
+                // Set placeholders instead of pre-filling inputs
+                if (product.price) {
+                    // Use placeholders to suggest values without pre-filling
+                    productionCost.placeholder = `e.g., ${(parseFloat(product.price) * 0.7).toFixed(2)}`;
+                    salesPerMonth.placeholder = "e.g., 100";
+                    targetMargin.placeholder = "e.g., 30";
+                    
+                    // Add a suggestion hint below the inputs
+                    const hintElement = document.getElementById('pricing-inputs-hint');
+                    if (hintElement) {
+                        hintElement.innerHTML = `Suggested values: Production cost at 70% of price (${currencySymbol}${(parseFloat(product.price) * 0.7).toFixed(2)}), 100 monthly sales, 30% margin`;
                     }
                 }
                 
-                // Display product image if available
-                if (details.product_image_url) {
-                    const img = document.createElement('img');
-                    img.src = details.product_image_url;
-                    img.className = 'product-image';
-                    img.alt = details.name || 'Product image';
-                    productDetails.appendChild(img);
-                }
+                // Show competitor analysis card
+                competitorAnalysisCard.classList.remove('d-none');
                 
-                // Display product details
-                addDetailItem('Name', details.name);
-                addDetailItem('Company', details.company);
-                addDetailItem('Category', details.category);
-                addDetailItem('Subcategory', details.subcategory);
-                
-                // Format and display price with currency
-                if (details.price !== null && !isNaN(details.price)) {
-                    const formattedPrice = details.currency_symbol + details.price.toFixed(2);
-                    addDetailItem('Price', formattedPrice, true);
-                }
-                
-                addDetailItem('Currency Code', details.currency_code);
-                addDetailItem('Country Code', details.country_code);
-                addDetailItem('Description', details.description);
+                updateStepStatus(1, 'Completed');
+                updateStepStatus(2, 'Completed');
+                updateStepStatus(3, 'In Progress');
             }
             
-            function initializeCompetitorCards(urls) {
-                competitorsList.innerHTML = '';
+            // Update competitors status
+            function updateCompetitorsStatus(html) {
+                competitorsStatus.innerHTML = html;
+            }
+            
+            // Handle competitor details
+            function handleCompetitorDetails(data) {
+                const { url, details, index } = data;
                 
-                if (!urls || urls.length === 0) {
-                    const noCompetitors = document.createElement('div');
-                    noCompetitors.className = 'no-competitors';
-                    noCompetitors.textContent = 'No competitors found.';
-                    competitorsList.appendChild(noCompetitors);
+                if (details) {
+                    competitorData.push(details);
+                    
+                    // Create competitor card
+                    const competitorElement = document.createElement('div');
+                    competitorElement.className = 'competitor-item';
+                    competitorElement.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5>${details.name || 'Competitor Product'}</h5>
+                            <span class="badge bg-primary">
+                                ${details.currency_symbol || details.currency || '$'}${formatCurrency(details.price)}
+                            </span>
+                        </div>
+                        <p class="mb-1">${details.company || 'Unknown Brand'}</p>
+                        <p class="small text-muted mb-0">${url}</p>
+                    `;
+                    competitorsContainer.appendChild(competitorElement);
+                    
+                    // Update status if this is the last competitor
+                    if (competitorData.length === 5) {
+                        updateCompetitorsStatus(`<div class="alert alert-success">
+                            <i class="bi bi-check-circle"></i> Finished analyzing ${competitorData.length} competitors.
+                        </div>`);
+                    }
+                }
+            }
+            
+            // Optimize Price and Generate Promotions
+            optimizeBtn.addEventListener('click', function() {
+                // Validate inputs
+                const cost = parseFloat(productionCost.value);
+                const sales = parseInt(salesPerMonth.value);
+                const margin = parseFloat(targetMargin.value);
+                
+                if (isNaN(cost) || cost <= 0) {
+                    showError('Please enter a valid production cost');
                     return;
                 }
                 
-                const listDiv = document.createElement('div');
-                listDiv.className = 'competitors-list';
+                if (isNaN(sales) || sales <= 0) {
+                    showError('Please enter a valid monthly sales volume');
+                    return;
+                }
                 
-                urls.forEach((url, index) => {
-                    const card = document.createElement('div');
-                    card.className = 'competitor-card loading';
-                    card.id = `competitor-${index}`;
-                    
-                    const title = document.createElement('h3');
-                    title.textContent = `Loading competitor ${index + 1}...`;
-                    card.appendChild(title);
-                    
-                    const skeletons = document.createElement('div');
-                    for (let i = 0; i < 3; i++) {
-                        const skeleton = document.createElement('div');
-                        skeleton.className = 'skeleton';
-                        skeletons.appendChild(skeleton);
+                if (isNaN(margin) || margin <= 0 || margin >= 100) {
+                    showError('Please enter a valid target margin (between 1 and 99)');
+                    return;
+                }
+                
+                if (!sessionId) {
+                    showError('Session not found. Please analyze the product first.');
+                    return;
+                }
+                
+                // Show loading
+                hideError();
+                updateStatus('Optimizing price and generating promotions...');
+                
+                // Update step status
+                updateStepStatus(4, 'In Progress');
+                
+                // Send request to server
+                fetch('/api/optimize-price', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sessionId,
+                        productionCost: cost,
+                        salesPerMonth: sales,
+                        targetMargin: margin
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => {
+                            throw new Error(data.error || 'Failed to optimize price');
+                        });
                     }
-                    card.appendChild(skeletons);
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data.success) {
+                        throw new Error(data.error || 'Failed to optimize price');
+                    }
                     
-                    listDiv.appendChild(card);
-                    competitorCards[index] = card;
+                    // Display pricing strategy
+                    displayPricingStrategy(data);
+                    
+                    // Display promotional calendar
+                    displayPromotionalCalendar(data.promotionCalendar);
+                    
+                    // Update status
+                    updateStatus('', false);
+                    updateStepStatus(4, 'Completed');
+                    updateStepStatus(5, 'Completed');
+                    updateStepStatus(6, 'Completed');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showError(error.message);
+                    updateStepStatus(4, 'Current');
                 });
+            });
+            
+            // Display pricing strategy
+            function displayPricingStrategy(data) {
+                const { productDetails, strategy, competitorAnalysis } = data;
+                const currencySymbol = productDetails.currency || '$';
+                const currencyCode = productDetails.currencyCode || 'USD';
                 
-                competitorsList.appendChild(listDiv);
+                // Show pricing results card
+                pricingResultsCard.classList.remove('d-none');
+                
+                // Update price recommendation
+                optimizedPrice.textContent = formatCurrencyValue(strategy.optimizedPrice, currencyCode);
+                currentPrice.textContent = formatCurrencyValue(productDetails.currentPrice, currencyCode);
+                
+                // Calculate price change percentage
+                const priceChange = ((strategy.optimizedPrice - productDetails.currentPrice) / productDetails.currentPrice) * 100;
+                priceChangePercentage.textContent = `${priceChange > 0 ? '+' : ''}${priceChange.toFixed(2)}%`;
+                priceChangePercentage.className = 'badge';
+                
+                if (priceChange > 0) {
+                    priceChangePercentage.classList.add('bg-success');
+                } else if (priceChange < 0) {
+                    priceChangePercentage.classList.add('bg-danger');
+                } else {
+                    priceChangePercentage.classList.add('bg-secondary');
+                }
+                
+                // Update strategy details
+                strategyName.textContent = strategy.optimizedStrategy.name;
+                strategyDescription.textContent = strategy.optimizedStrategy.description;
+                
+                // Update margin analysis
+                targetMarginDisplay.textContent = strategy.marginAnalysis.targetMargin.toFixed(2);
+                actualMargin.textContent = strategy.marginAnalysis.actualMargin.toFixed(2);
+                productionCostDisplay.textContent = formatCurrencyValue(strategy.marginAnalysis.productCost, currencyCode);
+                
+                // Calculate profit per unit
+                const profit = strategy.optimizedPrice - strategy.marginAnalysis.productCost;
+                profitPerUnit.textContent = formatCurrencyValue(profit, currencyCode);
+                
+                // Update market position
+                const position = strategy.competitivePosition ? strategy.competitivePosition.relativeToAverage + 50 : 50;
+                marketPositionIndicator.style.width = `${Math.min(Math.max(position, 0), 100)}%`;
+                
+                // Update market insights
+                marketInsights.textContent = strategy.insights || 'No market insights available.';
+                
+                // Update competitor analysis
+                avgCompetitorPrice.textContent = formatCurrencyValue(competitorAnalysis.averagePrice, currencyCode);
+                minCompetitorPrice.textContent = formatCurrencyValue(competitorAnalysis.minPrice, currencyCode);
+                maxCompetitorPrice.textContent = formatCurrencyValue(competitorAnalysis.maxPrice, currencyCode);
+                numCompetitors.textContent = competitorAnalysis.numberOfCompetitors;
+                
+                // Display alternative strategies
+                alternativeStrategiesContainer.innerHTML = '';
+                
+                if (strategy.alternativeStrategies && strategy.alternativeStrategies.length > 0) {
+                    strategy.alternativeStrategies.forEach(altStrategy => {
+                        const strategyElement = document.createElement('div');
+                        strategyElement.className = 'card mb-2';
+                        strategyElement.innerHTML = `
+                            <div class="card-body py-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">${altStrategy.name}</h6>
+                                    <span>${currencySymbol}${formatCurrencyValue(altStrategy.price, currencyCode)}</span>
+                                </div>
+                                <p class="small mb-0 text-muted">${altStrategy.description}</p>
+                                <p class="small mb-0">Margin: ${altStrategy.margin.toFixed(2)}%</p>
+                            </div>
+                        `;
+                        alternativeStrategiesContainer.appendChild(strategyElement);
+                    });
+                } else {
+                    alternativeStrategiesContainer.innerHTML = '<p>No alternative strategies available.</p>';
+                }
             }
             
-            function updateCompetitorCard(data) {
-                const card = competitorCards[data.index];
-                if (!card) return;
+            // Display promotional calendar - UPDATED FUNCTION
+            function displayPromotionalCalendar(calendar) {
+                // Show promotion calendar card
+                promotionCalendarCard.classList.remove('d-none');
                 
-                card.className = 'competitor-card'; // Remove loading class
-                card.innerHTML = '';
+                console.log("Calendar data received:", calendar);
                 
-                const title = document.createElement('h3');
-                title.textContent = data.details.name || `Competitor ${data.index + 1}`;
-                card.appendChild(title);
+                // Get currency info from ALL possible sources with strict fallback chain
+                // 1. Direct from calendar top level
+                // 2. From calendar.productInfo
+                // 3. From our productData
+                // 4. Default to '$' only as last resort
+                const currencySymbol = calendar.currencySymbol || 
+                                      calendar.productInfo?.currencySymbol || 
+                                      productData?.currency_symbol || 
+                                      productData?.currency || '$';
                 
-                // Display competitor details
-                function addCompetitorDetail(label, value, isPrice = false) {
-                    if (value !== null && value !== undefined && value !== '') {
-                        const div = document.createElement('div');
-                        div.className = 'detail-item';
+                const currencyCode = calendar.currencyCode || 
+                                    calendar.productInfo?.currencyCode || 
+                                    productData?.currency_code || 'USD';
+                
+                console.log(`Using currency in promotions: ${currencySymbol} (${currencyCode})`);
+                
+                // Clear container
+                promotionsContainer.innerHTML = '';
+                
+                // Display promotions
+                if (calendar.promotionSuggestions && calendar.promotionSuggestions.length > 0) {
+                    calendar.promotionSuggestions.forEach((promo, index) => {
+                        const promoElement = document.createElement('div');
+                        promoElement.className = 'promotion-card';
                         
-                        const labelSpan = document.createElement('span');
-                        labelSpan.className = 'detail-label';
-                        labelSpan.textContent = label + ':';
+                        // Get the specific currency for this promotion, falling back to global if not present
+                        const promoSymbol = promo.currencySymbol || currencySymbol;
+                        const promoCode = promo.currencyCode || currencyCode;
                         
-                        const valueSpan = document.createElement('span');
-                        valueSpan.className = 'detail-value' + (isPrice ? ' price-highlight' : '');
-                        valueSpan.textContent = value;
+                        // Calculate discount display text
+                        let discountDisplay = '';
+                        if (promo.discountUnit === '%') {
+                            discountDisplay = `${promo.discountValue}% off`;
+                        } else {
+                            discountDisplay = `${promoSymbol}${formatCurrencyValue(promo.discountValue, promoCode)} off`;
+                        }
                         
-                        div.appendChild(labelSpan);
-                        div.appendChild(valueSpan);
-                        card.appendChild(div);
+                        promoElement.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5>${promo.type}</h5>
+                                    <p class="mb-1">${promo.details}</p>
+                                </div>
+                                <div class="text-end">
+                                    <div class="h5">
+                                        <span class="currency-symbol">${promoSymbol}</span>
+                                        <span>${formatCurrencyValue(promo.promotionalPrice, promoCode)}</span>
+                                    </div>
+                                    <div>
+                                        <s class="small price-strikethrough">${promoSymbol}${formatCurrencyValue(promo.originalPrice, promoCode)}</s>
+                                        <span class="badge bg-danger ms-1">${discountDisplay}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="bi bi-calendar-event me-2"></i>
+                                        <span>${promo.startDate} to ${promo.endDate}</span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-cash me-2"></i>
+                                        <span>Est. Margin: ${promo.estimatedMargin ? promo.estimatedMargin.toFixed(2) : '0.00'}%</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="alert alert-light py-1 px-2 mb-0 small">
+                                        <i class="bi bi-info-circle"></i> ${promo.reasoning}
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="small text-muted mt-2 mb-0">${promo.timing}</p>
+                        `;
+                        
+                        promotionsContainer.appendChild(promoElement);
+                        
+                        // Debug output to console for currency verification
+                        console.log(`Promotion ${index + 1} using currency: ${promoSymbol}`);
+                    });
+                } else {
+                    promotionsContainer.innerHTML = '<div class="alert alert-warning">No promotions available.</div>';
+                }
+                
+                // Display seasonal insights
+                if (calendar.seasonalInsights) {
+                    let insightsHtml = '';
+                    
+                    if (calendar.seasonalInsights.categorySeasonality) {
+                        insightsHtml += `<p>${calendar.seasonalInsights.categorySeasonality}</p>`;
                     }
+                    
+                    if (calendar.seasonalInsights.peakShoppingWindows && calendar.seasonalInsights.peakShoppingWindows.length > 0) {
+                        insightsHtml += '<h6>Peak Shopping Windows:</h6>';
+                        
+                        calendar.seasonalInsights.peakShoppingWindows.forEach(window => {
+                            insightsHtml += `
+                                <div class="calendar-item">
+                                    <strong>${window.name}</strong>: ${window.startDate} to ${window.endDate}
+                                    <p class="small mb-0">${window.reason}</p>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    seasonalInsights.innerHTML = insightsHtml || 'No seasonal insights available.';
+                } else {
+                    seasonalInsights.textContent = 'No seasonal insights available.';
                 }
-                
-                addCompetitorDetail('Company', data.details.company);
-                
-                // Format and display price with currency
-                if (data.details.price !== null && !isNaN(data.details.price)) {
-                    const formattedPrice = data.details.currency_symbol + data.details.price.toFixed(2);
-                    addCompetitorDetail('Price', formattedPrice, true);
-                }
-                
-                // Add link to competitor product
-                const link = document.createElement('a');
-                link.href = data.url;
-                link.target = '_blank';
-                link.className = 'competitor-url';
-                link.textContent = 'View Product';
-                card.appendChild(link);
             }
             
-            function updateCompetitorCardError(data) {
-                const card = competitorCards[data.index];
-                if (!card) return;
+            // Reset UI
+            function resetUI() {
+                // Hide cards
+                productDetailsCard.classList.add('d-none');
+                competitorAnalysisCard.classList.add('d-none');
+                pricingInputsCard.classList.add('d-none');
+                pricingResultsCard.classList.add('d-none');
+                promotionCalendarCard.classList.add('d-none');
                 
-                card.className = 'competitor-card'; // Remove loading class
-                card.innerHTML = '';
+                // Clear containers
+                competitorsContainer.innerHTML = '';
+                alternativeStrategiesContainer.innerHTML = '';
+                promotionsContainer.innerHTML = '';
                 
-                const title = document.createElement('h3');
-                title.textContent = `Competitor ${data.index + 1}`;
-                card.appendChild(title);
+                // Reset input fields
+                productionCost.value = '';
+                salesPerMonth.value = '';
+                targetMargin.value = '';
                 
-                const errorMsg = document.createElement('div');
-                errorMsg.className = 'warning';
-                errorMsg.textContent = `Error: ${data.error}`;
-                card.appendChild(errorMsg);
+                // Reset status badges
+                updateStepStatus(1, 'Current');
+                updateStepStatus(2, 'Waiting');
+                updateStepStatus(3, 'Waiting');
+                updateStepStatus(4, 'Waiting');
+                updateStepStatus(5, 'Waiting');
+                updateStepStatus(6, 'Waiting');
                 
-                // Add link to competitor product
-                const link = document.createElement('a');
-                link.href = data.url;
-                link.target = '_blank';
-                link.className = 'competitor-url';
-                link.textContent = 'View Product';
-                card.appendChild(link);
-            }
-            
-            function showCompetitorError(error) {
-                const warningDiv = document.createElement('div');
-                warningDiv.className = 'warning';
-                warningDiv.textContent = 'Warning: ' + error;
-                competitorsList.insertBefore(warningDiv, competitorsList.firstChild);
+                // Reset state variables
+                productData = null;
+                competitorData = [];
+                sessionId = null;
             }
         });
     </script>

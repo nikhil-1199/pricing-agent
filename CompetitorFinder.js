@@ -1,10 +1,18 @@
 // CompetitorFinder.js
 // A Node.js program that finds top 5 competitors for a given product and returns purchase URLs
 
+// Make dotenv optional
+try {
+  require('dotenv').config();
+  console.log("LOG: dotenv loaded successfully, but will prioritize system environment variables");
+} catch (err) {
+  console.log("LOG: dotenv not available, using system environment variables only");
+}
+
 const axios = require('axios');
 const { getCountry } = require('countries-and-timezones');
 
-// Get API keys from environment variables
+// Get API keys directly from environment variables
 const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY;
 const SERPER_API_KEY = process.env.SERPER_API_KEY;
 
@@ -17,7 +25,15 @@ async function findCompetitors(
   countryCode
 ) {
   try {
-    // Convert country code to name
+    // Check API keys at runtime
+    if (!PERPLEXITY_API_KEY) {
+      return { error: "PERPLEXITY_API_KEY environment variable is not set" };
+    }
+    if (!SERPER_API_KEY) {
+      return { error: "SERPER_API_KEY environment variable is not set" };
+    }
+    
+  // Convert country code to name
     let countryName;
     try {
       const country = getCountry(countryCode);
@@ -58,15 +74,15 @@ async function findCompetitors(
 
 async function findTopCompetitors(productName, price, currencyCode, countryName, category) {
   try {
-    // Create prompt for Perplexity
-    const prompt = `Who are the top 5 competitors of "${productName}" which costs ${currencyCode} ${price} in ${countryName} in the ${category} category? Consider only those products that compete directly with said product in ${countryName}, which belong to a different brand and are in the same price bracket. Give me only the product names in json format like: {"product_names": ["prod 1", "prod 2",...]}.  Do not include any additional reasoning text.  Do not return multiple jsons.`;
+    // Create prompt for Perplexity with specific price bracket definition
+    const prompt = `Who are the top 5 competitors of "${productName}" which costs ${currencyCode} ${price} in ${countryName} in the ${category} category? Consider only those products that compete directly with said product in ${countryName}, which belong to a different brand and are in the same price bracket (defined as within ±15% of the product's price: ${currencyCode} ${(price * 0.85).toFixed(2)} to ${currencyCode} ${(price * 1.15).toFixed(2)}). Give me only the product names in json format like: {"product_names": ["prod 1", "prod 2",...]}.  Do not include any additional reasoning text.  Do not return multiple jsons.`;
 
     console.log("Querying Perplexity for competitors...");
     console.log(prompt);
     const response = await axios.post(
       'https://api.perplexity.ai/chat/completions',
       {
-        model: 'sonar',
+        model: 'sonar-pro', // Upgraded to Sonar Pro model
         messages: [{ role: 'user', content: prompt }]
       },
       {
@@ -140,7 +156,7 @@ async function findPurchaseUrls(competitorProducts, countryCode, countryName, ca
       const perplexityResponse = await axios.post(
         'https://api.perplexity.ai/chat/completions',
         {
-          model: 'sonar',
+          model: 'sonar-pro', // Upgraded to Sonar Pro model
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: JSON.stringify(filteredSerperData) }
