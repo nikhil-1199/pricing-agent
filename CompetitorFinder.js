@@ -94,7 +94,8 @@ async function findTopCompetitors(productName, price, currencyCode, countryName,
     );
 
     const content = response.data.choices[0].message.content;
-    
+    console.log("Perplexity responded with... ") ;
+    console.log(content);
     // Parse JSON from response
     try {
       const jsonStart = content.indexOf('{');
