@@ -1,3 +1,4 @@
+<!-- Location: frontend/public/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,111 +7,7 @@
     <title>Dynamic Pricing Agent</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <style>
-        body {
-            background-color: #f8f9fa;
-            color: #333;
-        }
-        .header {
-            background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
-            color: white;
-            padding: 1.5rem 0;
-            margin-bottom: 2rem;
-        }
-        .card {
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 1.5rem;
-            border: none;
-        }
-        .card-header {
-            border-radius: 10px 10px 0 0 !important;
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #e3e6f0;
-            padding: 1rem 1.5rem;
-            font-weight: 600;
-        }
-        .card-body {
-            padding: 1.5rem;
-        }
-        .btn-primary {
-            background-color: #4e73df;
-            border-color: #4e73df;
-        }
-        .btn-primary:hover {
-            background-color: #2e59d9;
-            border-color: #2e59d9;
-        }
-        .progress {
-            height: 0.8rem;
-            border-radius: 0.25rem;
-        }
-        .badge {
-            font-size: 0.85em;
-            padding: 0.35em 0.65em;
-        }
-        .currency-symbol {
-            font-weight: normal;
-            color: #6c757d;
-        }
-        .price-large {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #4e73df;
-        }
-        .price-strikethrough {
-            text-decoration: line-through;
-            color: #dc3545;
-        }
-        .tooltip-icon {
-            color: #6c757d;
-            cursor: pointer;
-        }
-        .competitor-item {
-            border-left: 4px solid #4e73df;
-            padding-left: 1rem;
-            margin-bottom: 1rem;
-        }
-        .promotion-card {
-            border-left: 4px solid #2ecc71;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            background-color: #f8fff9;
-            border-radius: 0.5rem;
-        }
-        .calendar-item {
-            border-left: 4px solid #f39c12;
-            padding: 0.5rem 1rem;
-            margin-bottom: 0.5rem;
-            background-color: #fffaf3;
-            border-radius: 0.25rem;
-        }
-        .status-container {
-            background-color: #f1f3f9;
-            border-radius: 8px;
-            padding: 0.75rem;
-            margin-bottom: 1rem;
-            border-left: 4px solid #4e73df;
-        }
-        .chart-container {
-            height: 300px;
-            margin-bottom: 1.5rem;
-        }
-        .loading-pulse {
-            display: inline-block;
-            width: 1rem;
-            height: 1rem;
-            border-radius: 50%;
-            background-color: #4e73df;
-            animation: pulse 1.5s infinite ease-in-out;
-            margin-right: 0.5rem;
-        }
-        @keyframes pulse {
-            0% { transform: scale(0.8); opacity: 0.5; }
-            50% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(0.8); opacity: 0.5; }
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="header">
@@ -382,6 +279,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Define the API base URL
+            // Change this to your actual Koyeb backend URL when deployed
+            // const API_BASE_URL = 'https://your-app-name.koyeb.app';
+            const API_BASE_URL = 'http://localhost:3000';
+
             // DOM Elements
             const productUrl = document.getElementById('productUrl');
             const analyzeBtn = document.getElementById('analyzeBtn');
@@ -544,7 +446,7 @@
                 
                 // Start analysis with SSE (Server-Sent Events)
                 const encodedUrl = encodeURIComponent(url);
-                eventSource = new EventSource(`/api/analyze-product?productUrl=${encodedUrl}`);
+                eventSource = new EventSource(`${API_BASE_URL}/api/analyze-product?productUrl=${encodedUrl}`);
                 
                 eventSource.onmessage = function(event) {
                     const data = JSON.parse(event.data);
@@ -742,7 +644,7 @@
                 updateStepStatus(4, 'In Progress');
                 
                 // Send request to server
-                fetch('/api/optimize-price', {
+                fetch(`${API_BASE_URL}/api/optimize-price`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

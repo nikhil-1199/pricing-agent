@@ -1,13 +1,8 @@
 // CompetitorFinder.js
 // A Node.js program that finds top 5 competitors for a given product and returns purchase URLs
 
-// Make dotenv optional
-try {
-  require('dotenv').config();
-  console.log("LOG: dotenv loaded successfully, but will prioritize system environment variables");
-} catch (err) {
-  console.log("LOG: dotenv not available, using system environment variables only");
-}
+// Using Koyeb environment variables directly
+console.log("LOG: Using system environment variables");
 
 const axios = require('axios');
 const { getCountry } = require('countries-and-timezones');

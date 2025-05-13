@@ -1,0 +1,26 @@
+{
+  "service": {
+    "name": "dynamic-pricing-agent-api",
+    "env": {
+      "FIRECRAWL_API_KEY": "",
+      "PERPLEXITY_API_KEY": "",
+      "SERPER_API_KEY": "",
+      "FRONTEND_URL": "https://your-dynamic-pricing-frontend.vercel.app"
+    },
+    "routes": [
+      {
+        "path": "/"
+      }
+    ],
+    "ports": [
+      {
+        "port": 3000,
+        "protocol": "http"
+      }
+    ],
+    "resources": {
+      "cpu": 1,
+      "memory": 512
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "dynamic-pricing-agent-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for the AI-powered dynamic pricing and promotion planning agent",
+  "scripts": {
+    "start": "serve public"
+  },
+  "dependencies": {
+    "serve": "^14.0.0"
+  }
+}

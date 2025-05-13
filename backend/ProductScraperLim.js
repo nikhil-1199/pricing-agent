@@ -1,13 +1,8 @@
 // ProductScraperLim.js
 console.log("LOG: Script execution started."); // VERY FIRST LOG
 
-// Make dotenv optional
-try {
-  require('dotenv').config();
-  console.log("LOG: dotenv loaded successfully, but will prioritize system environment variables");
-} catch (err) {
-  console.log("LOG: dotenv not available, using system environment variables only");
-}
+// Using Koyeb environment variables directly
+console.log("LOG: Using system environment variables");
 
 /**
  * Scrapes product details from a given URL using Firecrawl's v1/scrape API

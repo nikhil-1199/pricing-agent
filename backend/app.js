@@ -1,16 +1,11 @@
-// app.js - Fixed Session Management and PromotionPlanner integration
+// Location: backend/app.js
+// Modified for backend-only deployment on Koyeb
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 
-
-// Make dotenv optional
-try {
-  require('dotenv').config();
-  console.log("LOG: dotenv loaded successfully, but will prioritize system environment variables");
-} catch (err) {
-  console.log("LOG: dotenv not available, using system environment variables only");
-}
+// Using Koyeb environment variables directly
+console.log("LOG: Using system environment variables");
 
 const { scrapeProductDetails } = require('./ProductScraperLim');
 const findCompetitors = require('./CompetitorFinder');
@@ -23,11 +18,21 @@ const FIRECRAWL_API_KEY = process.env.FIRECRAWL_API_KEY;
 const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY;
 const SERPER_API_KEY = process.env.SERPER_API_KEY;
 
+// CORS configuration for Vercel frontend
+const FRONTEND_URL = process.env.FRONTEND_URL || '*';
+
+// And make sure your corsOptions looks like this
+const corsOptions = {
+  origin: '*',  // Allow all origins
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+  exposedHeaders: ['X-Session-Id']
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
 
 // Check for API keys with more informative messages
 if (!FIRECRAWL_API_KEY) {
@@ -43,7 +48,6 @@ if (!SERPER_API_KEY) {
     console.warn('Set this environment variable before running the application');
 }
 
-
 // In-memory storage for session data
 const sessionData = new Map();
 
@@ -51,8 +55,9 @@ function generateSessionId() {
     return Math.random().toString(36).substr(2, 9);
 }
 
+// Health check endpoint for Koyeb
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.json({ status: 'OK', message: 'Dynamic Pricing Agent API is running' });
 });
 
 app.get('/api/analyze-product', async (req, res) => {
@@ -63,7 +68,7 @@ app.get('/api/analyze-product', async (req, res) => {
     }
     
     const sessionId = generateSessionId();
-    console.log(`LOG: Generated session ID: ${sessionId}`); // Add this log
+    console.log(`LOG: Generated session ID: ${sessionId}`);
     
     res.writeHead(200, {
         'Content-Type': 'text/event-stream',
@@ -102,7 +107,7 @@ app.get('/api/analyze-product', async (req, res) => {
             competitorUrls: [],   
             timestamp: Date.now()
         });
-        console.log(`LOG: [${sessionId}] Session data stored`); // Add this log
+        console.log(`LOG: [${sessionId}] Session data stored`);
 
         sendUpdate('status', 'Finding competitors...');
         const competitorResult = await findCompetitors(
@@ -167,7 +172,7 @@ app.get('/api/analyze-product', async (req, res) => {
         console.log(`LOG: [${sessionId}] Product analysis completed.`);
         // Send session ID one more time in the complete event
         sendUpdate('complete', `Analysis completed. Session ID: ${sessionId}`);
-        console.log(`LOG: [${sessionId}] Available sessions:`, Array.from(sessionData.keys())); // Add this log
+        console.log(`LOG: [${sessionId}] Available sessions:`, Array.from(sessionData.keys()));
         
     } catch (error) {
         console.error(`ERROR: [${sessionId}] Error during product analysis:`, error.stack || error);
@@ -184,8 +189,8 @@ app.post('/api/optimize-price', async (req, res) => {
     console.log('LOG: Received optimize-price request:', req.body);
     const { sessionId, productionCost, salesPerMonth, targetMargin } = req.body;
     
-    console.log(`LOG: Looking for session: ${sessionId}`); // Add this log
-    console.log(`LOG: Available sessions:`, Array.from(sessionData.keys())); // Add this log
+    console.log(`LOG: Looking for session: ${sessionId}`);
+    console.log(`LOG: Available sessions:`, Array.from(sessionData.keys()));
     
     if (!sessionId || productionCost === undefined || salesPerMonth === undefined || targetMargin === undefined) {
         console.error('ERROR: Missing required fields for price optimization:', req.body);
@@ -195,7 +200,7 @@ app.post('/api/optimize-price', async (req, res) => {
     const data = sessionData.get(sessionId);
     if (!data) {
         console.error('ERROR: Session not found for ID:', sessionId);
-        console.log('DEBUGGING: Available sessions are:', Array.from(sessionData.keys())); // Add debugging info
+        console.log('DEBUGGING: Available sessions are:', Array.from(sessionData.keys()));
         return res.status(404).json({ success: false, error: 'Session not found. Please re-analyze the product first.' });
     }
     
@@ -230,6 +235,7 @@ app.post('/api/optimize-price', async (req, res) => {
             pricingStrategyOutput?.optimizedStrategy?.name || 'Unnamed strategy');
         
         // Initialize the promotion planner with COMPLETE product details
+        console.log('LOG: [${sessionId}] Creating PromotionPlanner');
         const planner = new PromotionPlanner();
         const promoCalendarInput = {
             // Add ALL product details needed for proper promotions
